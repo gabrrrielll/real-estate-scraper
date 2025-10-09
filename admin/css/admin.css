@@ -1,0 +1,250 @@
+/* Real Estate Scraper Admin Styles */
+
+.res-admin-container {
+    display: flex;
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.res-main-content {
+    flex: 2;
+}
+
+.res-sidebar {
+    flex: 1;
+    max-width: 300px;
+}
+
+.res-settings-section {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.res-settings-section h2 {
+    margin-top: 0;
+    color: #23282d;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.res-status-box,
+.res-logs-box {
+    background: #fff;
+    border: 1px solid #ccd0d4;
+    border-radius: 4px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.res-status-box h3,
+.res-logs-box h3 {
+    margin-top: 0;
+    color: #23282d;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.res-actions {
+    margin-top: 15px;
+}
+
+.res-actions .button {
+    margin-right: 10px;
+    margin-bottom: 5px;
+}
+
+.res-logs-container {
+    background: #f8f9fa;
+    border: 1px solid #e1e5e9;
+    border-radius: 4px;
+    padding: 10px;
+    height: 300px;
+    overflow-y: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+}
+
+.res-logs-container .log-entry {
+    margin-bottom: 5px;
+    padding: 2px 0;
+}
+
+.res-logs-container .log-info {
+    color: #0073aa;
+}
+
+.res-logs-container .log-warning {
+    color: #d63638;
+}
+
+.res-logs-container .log-error {
+    color: #d63638;
+    font-weight: bold;
+}
+
+.res-logs-container .log-debug {
+    color: #666;
+}
+
+.res-logs-actions {
+    text-align: center;
+}
+
+.res-logs-actions .button {
+    margin: 0 5px;
+}
+
+/* Progress bar */
+.res-progress-container {
+    margin: 15px 0;
+}
+
+.res-progress-bar {
+    width: 100%;
+    height: 20px;
+    background-color: #f0f0f1;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.res-progress-fill {
+    height: 100%;
+    background-color: #0073aa;
+    width: 0%;
+    transition: width 0.3s ease;
+}
+
+.res-progress-text {
+    text-align: center;
+    margin-top: 5px;
+    font-size: 12px;
+    color: #666;
+}
+
+/* Status indicators */
+.res-status-running {
+    color: #0073aa;
+}
+
+.res-status-success {
+    color: #00a32a;
+}
+
+.res-status-error {
+    color: #d63638;
+}
+
+/* Form improvements */
+.res-admin-container .form-table th {
+    width: 200px;
+    padding: 20px 10px 20px 0;
+}
+
+.res-admin-container .form-table td {
+    padding: 15px 10px;
+}
+
+.res-admin-container .form-table input[type="url"],
+.res-admin-container .form-table input[type="number"],
+.res-admin-container .form-table select {
+    width: 100%;
+    max-width: 400px;
+}
+
+/* Responsive */
+@media (max-width: 1200px) {
+    .res-admin-container {
+        flex-direction: column;
+    }
+
+    .res-sidebar {
+        max-width: none;
+    }
+}
+
+@media (max-width: 768px) {
+    .res-admin-container {
+        margin: 10px;
+    }
+
+    .res-settings-section,
+    .res-status-box,
+    .res-logs-box {
+        padding: 15px;
+    }
+
+    .res-logs-container {
+        height: 200px;
+    }
+}
+
+/* Loading spinner */
+.res-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #0073aa;
+    border-radius: 50%;
+    animation: res-spin 1s linear infinite;
+}
+
+@keyframes res-spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Button states */
+.res-button-loading {
+    position: relative;
+    color: transparent !important;
+}
+
+.res-button-loading:after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 16px;
+    height: 16px;
+    border: 2px solid #fff;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: res-spin 1s linear infinite;
+}
+
+/* Success/Error messages */
+.res-message {
+    padding: 10px 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+}
+
+.res-message-success {
+    background-color: #d1e7dd;
+    border: 1px solid #badbcc;
+    color: #0f5132;
+}
+
+.res-message-error {
+    background-color: #f8d7da;
+    border: 1px solid #f5c2c7;
+    color: #842029;
+}
+
+.res-message-info {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    color: #0c5460;
+}
