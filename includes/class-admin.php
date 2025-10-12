@@ -597,4 +597,4 @@ class Real_Estate_Scraper_Admin
 
         error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION COMPLETED =====');
     }
-}
+}?>

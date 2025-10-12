@@ -226,4 +226,4 @@ class Real_Estate_Scraper
 }
 
 // Initialize the plugin
-Real_Estate_Scraper::get_instance();
+Real_Estate_Scraper::get_instance();?>
