@@ -68,16 +68,16 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - ===== ADD_INLINE_ASSETS CALLED =====');
         error_log('RES DEBUG - Current screen: ' . (get_current_screen() ? get_current_screen()->id : 'NO SCREEN'));
         error_log('RES DEBUG - Plugin DIR: ' . REAL_ESTATE_SCRAPER_PLUGIN_DIR);
-        
+
         // Load jQuery first
         wp_enqueue_script('jquery');
         error_log('RES DEBUG - jQuery enqueued in add_inline_assets');
-        
+
         // CSS
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
         error_log('RES DEBUG - CSS path: ' . $css_path);
         error_log('RES DEBUG - CSS exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
-        
+
         if (file_exists($css_path)) {
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
@@ -86,7 +86,7 @@ class Real_Estate_Scraper_Admin
         } else {
             error_log('RES DEBUG - CSS file not found!');
         }
-        
+
         // JS Configuration
         error_log('RES DEBUG - Creating JS configuration');
         echo '<script type="text/javascript">';
@@ -102,12 +102,12 @@ class Real_Estate_Scraper_Admin
         )) . ';';
         echo '</script>';
         error_log('RES DEBUG - JS configuration created');
-        
+
         // JS Code with jQuery dependency check
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
         error_log('RES DEBUG - JS path: ' . $js_path);
         error_log('RES DEBUG - JS exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
-        
+
         if (file_exists($js_path)) {
             echo '<script type="text/javascript">';
             echo 'jQuery(document).ready(function($) {';
@@ -118,7 +118,7 @@ class Real_Estate_Scraper_Admin
         } else {
             error_log('RES DEBUG - JS file not found!');
         }
-        
+
         error_log('RES DEBUG - ===== ADD_INLINE_ASSETS COMPLETED =====');
     }
 
@@ -193,9 +193,10 @@ class Real_Estate_Scraper_Admin
             error_log('RES DEBUG - No form submission detected (GET request or empty POST)');
         }
 
-        // Get current options
+        // Get current options - force refresh from database
+        wp_cache_delete('real_estate_scraper_options', 'options');
         $options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Current options loaded for display: ' . print_r($options, true));
+        error_log('RES DEBUG - Current options loaded for display (after cache clear): ' . print_r($options, true));
 
         // Get property statuses for mapping
         $property_statuses = get_terms(array(
