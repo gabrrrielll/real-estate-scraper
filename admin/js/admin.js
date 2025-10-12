@@ -1,21 +1,13 @@
-// Simple initialization without jQuery ready
+// JavaScript will be wrapped in jQuery(document).ready by PHP
 console.log('RES DEBUG - JavaScript loaded');
 
 let isRunning = false;
 let logInterval = null;
 
-// Initialize when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-} else {
-    init();
-}
-
-function init() {
-    console.log('RES DEBUG - Initializing admin JS');
-    bindEvents();
-    refreshLogs();
-}
+// Initialize immediately since we're already in jQuery ready
+console.log('RES DEBUG - Initializing admin JS');
+bindEvents();
+refreshLogs();
 
 function bindEvents() {
     // Run scraper button

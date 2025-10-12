@@ -31,8 +31,9 @@ class Real_Estate_Scraper_Admin
         // Add custom cron intervals
         add_filter('cron_schedules', array($this, 'add_cron_intervals'));
 
-        // No hooks needed - assets will be loaded directly in admin page
-
+        // Ensure jQuery is loaded in admin
+        add_action('admin_enqueue_scripts', array($this, 'enqueue_jquery'));
+        
         error_log('RES DEBUG - Admin class hooks added');
     }
 
@@ -46,11 +47,25 @@ class Real_Estate_Scraper_Admin
     }
 
     /**
+     * Enqueue jQuery for admin pages
+     */
+    public function enqueue_jquery($hook)
+    {
+        if (strpos($hook, 'real-estate-scraper') !== false) {
+            wp_enqueue_script('jquery');
+            error_log('RES DEBUG - jQuery enqueued for hook: ' . $hook);
+        }
+    }
+
+    /**
      * Add inline assets directly in admin page
      */
     public function add_inline_assets()
     {
         error_log('RES DEBUG - Adding inline assets');
+        
+        // Load jQuery first
+        wp_enqueue_script('jquery');
         
         // CSS
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
@@ -75,13 +90,15 @@ class Real_Estate_Scraper_Admin
         )) . ';';
         echo '</script>';
         
-        // JS Code
+        // JS Code with jQuery dependency check
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
         if (file_exists($js_path)) {
             echo '<script type="text/javascript">';
+            echo 'jQuery(document).ready(function($) {';
             echo file_get_contents($js_path);
+            echo '});';
             echo '</script>';
-            error_log('RES DEBUG - JS loaded inline');
+            error_log('RES DEBUG - JS loaded inline with jQuery wrapper');
         }
     }
 
