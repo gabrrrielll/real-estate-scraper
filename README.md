@@ -34,7 +34,7 @@ Set the URLs for each property category:
 - Spații Comerciale (Commercial Spaces)
 
 ### Category Mapping
-Map each category to a property type taxonomy term in WordPress.
+Map each category to a property status taxonomy term in WordPress.
 
 ### Scraper Settings
 - **Cron Interval**: Choose how often to run the scraper (15min to daily)
@@ -71,8 +71,7 @@ The plugin maps scraped data to the following WordPress fields:
 - `fave_property_images` → Image Gallery
 
 ### Taxonomies
-- `property_type` → Based on category mapping
-- `property_status` → Set to "Închiriere" (Rent)
+- `property_status` → Based on category mapping
 
 ## Logging
 

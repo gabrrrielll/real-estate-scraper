@@ -91,9 +91,9 @@ class Real_Estate_Scraper_Admin
         // Get current options
         $options = get_option('real_estate_scraper_options', array());
 
-        // Get property types for mapping
-        $property_types = get_terms(array(
-            'taxonomy' => 'property_type',
+        // Get property statuses for mapping
+        $property_statuses = get_terms(array(
+            'taxonomy' => 'property_status',
             'hide_empty' => false
         ));
 
@@ -153,18 +153,18 @@ class Real_Estate_Scraper_Admin
                         
                         <div class="res-settings-section">
                             <h2><?php _e('Category Mapping', 'real-estate-scraper'); ?></h2>
-                            <p class="description"><?php _e('Map each category to a property type.', 'real-estate-scraper'); ?></p>
+                            <p class="description"><?php _e('Map each category to a property status.', 'real-estate-scraper'); ?></p>
                             
                             <table class="form-table">
                                 <tr>
                                     <th scope="row"><?php _e('Apartamente', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <select name="category_mapping[apartamente]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['apartamente'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
+                                            <option value=""><?php _e('Select Property Status', 'real-estate-scraper'); ?></option>
+                                            <?php foreach ($property_statuses as $status): ?>
+                                                <option value="<?php echo $status->term_id; ?>" 
+                                                        <?php selected($options['category_mapping']['apartamente'] ?? '', $status->term_id); ?>>
+                                                    <?php echo esc_html($status->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -174,11 +174,11 @@ class Real_Estate_Scraper_Admin
                                     <th scope="row"><?php _e('Garsoniere', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <select name="category_mapping[garsoniere]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['garsoniere'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
+                                            <option value=""><?php _e('Select Property Status', 'real-estate-scraper'); ?></option>
+                                            <?php foreach ($property_statuses as $status): ?>
+                                                <option value="<?php echo $status->term_id; ?>" 
+                                                        <?php selected($options['category_mapping']['garsoniere'] ?? '', $status->term_id); ?>>
+                                                    <?php echo esc_html($status->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -188,11 +188,11 @@ class Real_Estate_Scraper_Admin
                                     <th scope="row"><?php _e('Case/Vile', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <select name="category_mapping[case_vile]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['case_vile'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
+                                            <option value=""><?php _e('Select Property Status', 'real-estate-scraper'); ?></option>
+                                            <?php foreach ($property_statuses as $status): ?>
+                                                <option value="<?php echo $status->term_id; ?>" 
+                                                        <?php selected($options['category_mapping']['case_vile'] ?? '', $status->term_id); ?>>
+                                                    <?php echo esc_html($status->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -202,11 +202,11 @@ class Real_Estate_Scraper_Admin
                                     <th scope="row"><?php _e('Spații Comerciale', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <select name="category_mapping[spatii_comerciale]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['spatii_comerciale'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
+                                            <option value=""><?php _e('Select Property Status', 'real-estate-scraper'); ?></option>
+                                            <?php foreach ($property_statuses as $status): ?>
+                                                <option value="<?php echo $status->term_id; ?>" 
+                                                        <?php selected($options['category_mapping']['spatii_comerciale'] ?? '', $status->term_id); ?>>
+                                                    <?php echo esc_html($status->name); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         </select>
@@ -341,3 +341,4 @@ class Real_Estate_Scraper_Admin
         echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
     }
 }
+

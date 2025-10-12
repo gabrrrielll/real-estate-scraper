@@ -111,11 +111,11 @@ msgid "Category Mapping"
 msgstr ""
 
 #: includes/class-admin.php:123
-msgid "Map each category to a property type."
+msgid "Map each category to a property status."
 msgstr ""
 
 #: includes/class-admin.php:127
-msgid "Select Property Type"
+msgid "Select Property Status"
 msgstr ""
 
 #: includes/class-admin.php:157
@@ -201,3 +201,4 @@ msgstr ""
 #: admin/js/admin.js:23
 msgid "Are you sure?"
 msgstr ""
+

@@ -106,20 +106,13 @@ class Real_Estate_Scraper_Mapper
      */
     private function set_property_taxonomies($post_id, $category_key)
     {
-        // Set property status to 'Închiriere' (rent)
-        $rent_term = $this->get_or_create_term('property_status', 'Închiriere');
-        if ($rent_term) {
-            wp_set_post_terms($post_id, array($rent_term->term_id), 'property_status');
-            $this->logger->debug("Set property_status: Închiriere");
-        }
-
-        // Set property type based on category mapping
-        $property_type = $this->options['category_mapping'][$category_key] ?? '';
-        if (!empty($property_type)) {
-            $type_term = get_term_by('id', $property_type, 'property_type');
-            if ($type_term) {
-                wp_set_post_terms($post_id, array($type_term->term_id), 'property_type');
-                $this->logger->debug("Set property_type: {$type_term->name}");
+        // Set property status based on category mapping
+        $property_status = $this->options['category_mapping'][$category_key] ?? '';
+        if (!empty($property_status)) {
+            $status_term = get_term_by('id', $property_status, 'property_status');
+            if ($status_term) {
+                wp_set_post_terms($post_id, array($status_term->term_id), 'property_status');
+                $this->logger->debug("Set property_status: {$status_term->name}");
             }
         }
     }
@@ -304,3 +297,4 @@ class Real_Estate_Scraper_Mapper
         return $address;
     }
 }
+
