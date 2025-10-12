@@ -51,9 +51,12 @@ class Real_Estate_Scraper_Admin
      */
     public function enqueue_jquery($hook)
     {
+        error_log('RES DEBUG - enqueue_jquery called with hook: ' . $hook);
         if (strpos($hook, 'real-estate-scraper') !== false) {
             wp_enqueue_script('jquery');
             error_log('RES DEBUG - jQuery enqueued for hook: ' . $hook);
+        } else {
+            error_log('RES DEBUG - jQuery NOT enqueued - hook does not contain real-estate-scraper');
         }
     }
 
@@ -62,21 +65,30 @@ class Real_Estate_Scraper_Admin
      */
     public function add_inline_assets()
     {
-        error_log('RES DEBUG - Adding inline assets');
-
+        error_log('RES DEBUG - ===== ADD_INLINE_ASSETS CALLED =====');
+        error_log('RES DEBUG - Current screen: ' . (get_current_screen() ? get_current_screen()->id : 'NO SCREEN'));
+        error_log('RES DEBUG - Plugin DIR: ' . REAL_ESTATE_SCRAPER_PLUGIN_DIR);
+        
         // Load jQuery first
         wp_enqueue_script('jquery');
-
+        error_log('RES DEBUG - jQuery enqueued in add_inline_assets');
+        
         // CSS
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
+        error_log('RES DEBUG - CSS path: ' . $css_path);
+        error_log('RES DEBUG - CSS exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
+        
         if (file_exists($css_path)) {
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
             echo '</style>';
-            error_log('RES DEBUG - CSS loaded inline');
+            error_log('RES DEBUG - CSS loaded inline successfully');
+        } else {
+            error_log('RES DEBUG - CSS file not found!');
         }
-
+        
         // JS Configuration
+        error_log('RES DEBUG - Creating JS configuration');
         echo '<script type="text/javascript">';
         echo 'window.realEstateScraper = ' . json_encode(array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
@@ -89,17 +101,25 @@ class Real_Estate_Scraper_Admin
             )
         )) . ';';
         echo '</script>';
-
+        error_log('RES DEBUG - JS configuration created');
+        
         // JS Code with jQuery dependency check
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
+        error_log('RES DEBUG - JS path: ' . $js_path);
+        error_log('RES DEBUG - JS exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
+        
         if (file_exists($js_path)) {
             echo '<script type="text/javascript">';
             echo 'jQuery(document).ready(function($) {';
             echo file_get_contents($js_path);
             echo '});';
             echo '</script>';
-            error_log('RES DEBUG - JS loaded inline with jQuery wrapper');
+            error_log('RES DEBUG - JS loaded inline with jQuery wrapper successfully');
+        } else {
+            error_log('RES DEBUG - JS file not found!');
         }
+        
+        error_log('RES DEBUG - ===== ADD_INLINE_ASSETS COMPLETED =====');
     }
 
     /**
@@ -107,12 +127,14 @@ class Real_Estate_Scraper_Admin
      */
     public function admin_page()
     {
-        error_log('RES DEBUG - ===== ADMIN PAGE LOADED =====');
+        error_log('RES DEBUG - ===== ADMIN PAGE FUNCTION CALLED =====');
+        error_log('RES DEBUG - Function called at: ' . current_time('mysql'));
         error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
         error_log('RES DEBUG - User can manage options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
         error_log('RES DEBUG - Request method: ' . $_SERVER['REQUEST_METHOD']);
         error_log('RES DEBUG - POST data count: ' . count($_POST));
         error_log('RES DEBUG - POST keys: ' . implode(', ', array_keys($_POST)));
+        error_log('RES DEBUG - Current screen ID: ' . (get_current_screen() ? get_current_screen()->id : 'NO SCREEN'));
 
         // Check permissions first
         if (!current_user_can('manage_options')) {
