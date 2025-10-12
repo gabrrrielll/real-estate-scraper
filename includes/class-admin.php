@@ -406,17 +406,21 @@ class Real_Estate_Scraper_Admin
      */
     public function handle_save_settings()
     {
+        // Start output buffering to catch any premature output
+        ob_start();
         error_log('RES DEBUG - ===== HANDLE_SAVE_SETTINGS CALLED VIA ADMIN_POST HOOK =====');
 
         // Verify nonce
         if (!isset($_POST['res_nonce']) || !wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
             error_log('RES DEBUG - Nonce verification failed in handle_save_settings');
+            ob_end_clean(); // Clean buffer before dying
             wp_die(__('Security check failed. Please try again.', 'real-estate-scraper'));
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
             error_log('RES DEBUG - User does not have manage_options capability in handle_save_settings');
+            ob_end_clean(); // Clean buffer before dying
             wp_die(__('You do not have sufficient permissions to save settings.', 'real-estate-scraper'));
         }
 
@@ -429,6 +433,7 @@ class Real_Estate_Scraper_Admin
 
         // Determine redirect URL
         $redirect_url = admin_url('admin.php?page=real-estate-scraper');
+
         // The save_settings() function already logs if options match.
         // We'll check if the options in the DB match the POST data for a more robust check.
         $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
@@ -461,12 +466,10 @@ class Real_Estate_Scraper_Admin
             error_log('RES DEBUG - DB Data: ' . print_r($options, true));
         }
 
-        // Clear any buffer output that might prevent redirect
-        if (ob_get_length()) {
-            ob_clean();
-            error_log('RES DEBUG - Output buffer cleaned before redirect.');
-        }
-
+        // Clean (aggressively) and end output buffering
+        ob_end_clean();
+        error_log('RES DEBUG - Aggressive output buffer cleaned before redirect.');
+        
         wp_redirect($redirect_url);
         exit;
     }
