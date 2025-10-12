@@ -35,7 +35,7 @@ class Real_Estate_Scraper_Admin
         add_action('admin_enqueue_scripts', array($this, 'enqueue_jquery'));
 
         add_action('admin_post_res_save_settings', array($this, 'handle_save_settings'));
-        
+
         error_log('RES DEBUG - Admin class hooks added');
     }
 
@@ -141,6 +141,8 @@ class Real_Estate_Scraper_Admin
         // Show success message if redirected after save
         if (isset($_GET['settings-saved']) && $_GET['settings-saved'] == '1') {
             echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
+        } elseif (isset($_GET['settings-error']) && $_GET['settings-error'] == '1') {
+            echo '<div class="notice notice-error is-dismissible"><p>' . __('Error: Settings could not be saved or verified. Please check logs.', 'real-estate-scraper') . '</p></div>';
         }
 
         // Check permissions first
@@ -397,7 +399,7 @@ class Real_Estate_Scraper_Admin
     public function handle_save_settings()
     {
         error_log('RES DEBUG - ===== HANDLE_SAVE_SETTINGS CALLED VIA ADMIN_POST HOOK =====');
-        
+
         // Verify nonce
         if (!isset($_POST['res_nonce']) || !wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
             error_log('RES DEBUG - Nonce verification failed in handle_save_settings');
@@ -413,9 +415,55 @@ class Real_Estate_Scraper_Admin
         // Call the actual save settings logic
         $this->save_settings();
 
-        // Redirect back to the settings page with a success message
-        $redirect_url = admin_url('admin.php?page=real-estate-scraper&settings-saved=1');
-        error_log('RES DEBUG - Redirecting after save to: ' . $redirect_url);
+        // Determine redirect URL
+        $redirect_url = admin_url('admin.php?page=real-estate-scraper');
+        $options = get_option('real_estate_scraper_options', array()); // Get latest options to verify
+
+        // Check if settings were actually saved (based on previous logs, update_option returns true)
+        // We'll assume if save_settings() ran, it attempted to save.
+        // The issue is with the display/redirect.
+        if (isset($_GET['settings-saved']) && $_GET['settings-saved'] == '1') {
+            // This block is for display logic only, not for determining save success
+        }
+
+        // The save_settings() function already logs if options match.
+        // We'll check if the options in the DB match the POST data for a more robust check.
+        $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
+        $post_category_mapping = isset($_POST['category_mapping']) ? array_map('intval', $_POST['category_mapping']) : [];
+        $post_cron_interval = isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly';
+        $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
+        $post_default_status = isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft';
+
+        $db_category_urls = $options['category_urls'] ?? [];
+        $db_category_mapping = $options['category_mapping'] ?? [];
+        $db_cron_interval = $options['cron_interval'] ?? 'hourly';
+        $db_properties_to_check = $options['properties_to_check'] ?? 10;
+        $db_default_status = $options['default_status'] ?? 'draft';
+
+        $save_successful = (
+            $post_category_urls == $db_category_urls &&
+            $post_category_mapping == $db_category_mapping &&
+            $post_cron_interval == $db_cron_interval &&
+            $post_properties_to_check == $db_properties_to_check &&
+            $post_default_status == $db_default_status
+        );
+
+        if ($save_successful) {
+            $redirect_url = add_query_arg('settings-saved', '1', $redirect_url);
+            error_log('RES DEBUG - Settings successfully verified in DB. Redirecting to: ' . $redirect_url);
+        } else {
+            $redirect_url = add_query_arg('settings-error', '1', $redirect_url);
+            error_log('RES DEBUG - Settings NOT VERIFIED in DB. Redirecting to: ' . $redirect_url);
+            error_log('RES DEBUG - POST Data: ' . print_r($_POST, true));
+            error_log('RES DEBUG - DB Data: ' . print_r($options, true));
+        }
+
+        // Clear any buffer output that might prevent redirect
+        if (ob_get_length()) {
+            ob_clean();
+            error_log('RES DEBUG - Output buffer cleaned before redirect.');
+        }
+        
         wp_redirect($redirect_url);
         exit;
     }
@@ -528,17 +576,17 @@ class Real_Estate_Scraper_Admin
             } catch (Exception $e) {
                 error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
             }
-            
+
             // No echo here, redirect happens in handle_save_settings
         } else {
             error_log('RES DEBUG - Settings were not saved correctly');
             error_log('RES DEBUG - Difference: Expected=' . print_r($options, true) . ' Got=' . print_r($saved_options, true));
-            
+
             // Try to save again with autoload = yes
             error_log('RES DEBUG - Trying to save again with autoload=yes');
             $result2 = update_option('real_estate_scraper_options', $options, true);
             error_log('RES DEBUG - Second attempt result: ' . var_export($result2, true));
-            
+
             $saved_options2 = get_option('real_estate_scraper_options', array());
             if ($saved_options2 == $options) {
                 // No echo here, redirect happens in handle_save_settings
