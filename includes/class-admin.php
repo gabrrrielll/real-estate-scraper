@@ -34,7 +34,7 @@ class Real_Estate_Scraper_Admin
         // Load inline admin assets
         add_action('admin_head', array($this, 'inline_admin_assets_head'));
         add_action('admin_footer', array($this, 'inline_admin_assets_footer'));
-        
+
         error_log('RES DEBUG - Admin class hooks added');
     }
 
@@ -64,7 +64,7 @@ class Real_Estate_Scraper_Admin
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
         error_log('RES DEBUG - CSS path: ' . $css_path);
         error_log('RES DEBUG - CSS file exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
-        
+
         if (file_exists($css_path)) {
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
@@ -92,7 +92,7 @@ class Real_Estate_Scraper_Admin
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
         error_log('RES DEBUG - JS path: ' . $js_path);
         error_log('RES DEBUG - JS file exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
-        
+
         if (file_exists($js_path)) {
             // First output the localized data
             echo '<script type="text/javascript">';
@@ -107,7 +107,7 @@ class Real_Estate_Scraper_Admin
                 )
             )) . ';';
             echo '</script>';
-            
+
             // Then output the main JS file
             echo '<script type="text/javascript">';
             echo file_get_contents($js_path);
