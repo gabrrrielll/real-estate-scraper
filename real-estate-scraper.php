@@ -72,11 +72,12 @@ class Real_Estate_Scraper
         // Initialize components
         add_action('init', array($this, 'init'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
-
+        
         // AJAX handlers
         add_action('wp_ajax_res_run_scraper', array($this, 'ajax_run_scraper'));
         add_action('wp_ajax_res_get_logs', array($this, 'ajax_get_logs'));
         add_action('wp_ajax_res_clean_logs', array($this, 'ajax_clean_logs'));
+        add_action('wp_ajax_res_test_cron', array($this, 'ajax_test_cron'));
     }
 
     public function init()
@@ -190,6 +191,20 @@ class Real_Estate_Scraper
 
         $logger = Real_Estate_Scraper_Logger::get_instance();
         $result = $logger->clean_old_logs();
+
+        wp_send_json($result);
+    }
+    
+    public function ajax_test_cron()
+    {
+        check_ajax_referer('res_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
+        }
+
+        $cron = Real_Estate_Scraper_Cron::get_instance();
+        $result = $cron->test_cron();
 
         wp_send_json($result);
     }

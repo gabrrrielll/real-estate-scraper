@@ -47,10 +47,23 @@ class Real_Estate_Scraper_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
-        if ($hook !== 'toplevel_page_real-estate-scraper') {
+        // Debug: Log the hook to see what we're getting
+        error_log('Admin hook: ' . $hook);
+        
+        if (strpos($hook, 'real-estate-scraper') === false) {
             return;
         }
 
+        // Enqueue CSS
+        wp_enqueue_style(
+            'real-estate-scraper-admin',
+            REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/css/admin.css',
+            array(),
+            REAL_ESTATE_SCRAPER_VERSION,
+            'all'
+        );
+
+        // Enqueue JS
         wp_enqueue_script(
             'real-estate-scraper-admin',
             REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/js/admin.js',
@@ -59,13 +72,7 @@ class Real_Estate_Scraper_Admin
             true
         );
 
-        wp_enqueue_style(
-            'real-estate-scraper-admin',
-            REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/css/admin.css',
-            array(),
-            REAL_ESTATE_SCRAPER_VERSION
-        );
-
+        // Localize script with AJAX data
         wp_localize_script('real-estate-scraper-admin', 'realEstateScraper', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('res_nonce'),
@@ -84,7 +91,7 @@ class Real_Estate_Scraper_Admin
     public function admin_page()
     {
         // Handle form submission
-        if (isset($_POST['submit']) && wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
+        if (isset($_POST['submit']) && isset($_POST['res_nonce']) && wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
             $this->save_settings();
         }
 
@@ -312,33 +319,41 @@ class Real_Estate_Scraper_Admin
      */
     private function save_settings()
     {
+        if (!isset($_POST['category_urls']) || !isset($_POST['category_mapping'])) {
+            echo '<div class="notice notice-error"><p>' . __('Error: Invalid form data.', 'real-estate-scraper') . '</p></div>';
+            return;
+        }
+
         $options = array(
             'category_urls' => array(
-                'apartamente' => sanitize_url($_POST['category_urls']['apartamente']),
-                'garsoniere' => sanitize_url($_POST['category_urls']['garsoniere']),
-                'case_vile' => sanitize_url($_POST['category_urls']['case_vile']),
-                'spatii_comerciale' => sanitize_url($_POST['category_urls']['spatii_comerciale'])
+                'apartamente' => isset($_POST['category_urls']['apartamente']) ? sanitize_url($_POST['category_urls']['apartamente']) : '',
+                'garsoniere' => isset($_POST['category_urls']['garsoniere']) ? sanitize_url($_POST['category_urls']['garsoniere']) : '',
+                'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
+                'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
             ),
             'category_mapping' => array(
-                'apartamente' => intval($_POST['category_mapping']['apartamente']),
-                'garsoniere' => intval($_POST['category_mapping']['garsoniere']),
-                'case_vile' => intval($_POST['category_mapping']['case_vile']),
-                'spatii_comerciale' => intval($_POST['category_mapping']['spatii_comerciale'])
+                'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
+                'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
+                'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
+                'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
             ),
-            'cron_interval' => sanitize_text_field($_POST['cron_interval']),
-            'properties_to_check' => intval($_POST['properties_to_check']),
-            'default_status' => sanitize_text_field($_POST['default_status']),
+            'cron_interval' => isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly',
+            'properties_to_check' => isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10,
+            'default_status' => isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft',
             'retry_attempts' => 2,
             'retry_interval' => 30
         );
 
-        update_option('real_estate_scraper_options', $options);
+        $result = update_option('real_estate_scraper_options', $options);
 
-        // Update cron schedule
-        $cron = Real_Estate_Scraper_Cron::get_instance();
-        $cron->update_cron_interval($options['cron_interval']);
+        if ($result) {
+            // Update cron schedule
+            $cron = Real_Estate_Scraper_Cron::get_instance();
+            $cron->update_cron_interval($options['cron_interval']);
 
-        echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
+            echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
+        } else {
+            echo '<div class="notice notice-warning"><p>' . __('Settings were not changed.', 'real-estate-scraper') . '</p></div>';
+        }
     }
 }
-
