@@ -24,7 +24,7 @@ class Real_Estate_Scraper_Admin
     private function __construct()
     {
         error_log('RES DEBUG - Admin class constructor called');
-        
+
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
         $this->options = get_option('real_estate_scraper_options', array());
 
@@ -33,7 +33,7 @@ class Real_Estate_Scraper_Admin
 
         // Enqueue admin scripts
         add_action('admin_enqueue_scripts', array($this, 'enqueue_admin_scripts'));
-        
+
         error_log('RES DEBUG - Admin class hooks added');
     }
 
@@ -51,34 +51,44 @@ class Real_Estate_Scraper_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
-        error_log('RES DEBUG - Admin hook: ' . $hook);
+        error_log('RES DEBUG - Admin enqueue hook: ' . $hook);
         
-        // Only load on our admin page
-        if ($hook !== 'toplevel_page_real-estate-scraper') {
+        // Load on any admin page that contains our plugin
+        if (strpos($hook, 'real-estate-scraper') === false) {
             error_log('RES DEBUG - Not our admin page, skipping');
             return;
         }
 
         error_log('RES DEBUG - Loading admin scripts for real-estate-scraper page');
 
-        // Get plugin URL using WordPress functions
-        $plugin_url = plugin_dir_url(dirname(__FILE__));
+        // Use absolute path construction
+        $plugin_dir = dirname(dirname(__FILE__));
+        $plugin_url = plugins_url('', $plugin_dir . '/real-estate-scraper.php');
         
-        // Enqueue CSS with proper path
+        error_log('RES DEBUG - Plugin URL: ' . $plugin_url);
+        
+        // Check if files exist
+        $css_path = $plugin_dir . '/admin/css/admin.css';
+        $js_path = $plugin_dir . '/admin/js/admin.js';
+        
+        error_log('RES DEBUG - CSS file exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
+        error_log('RES DEBUG - JS file exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
+        
+        // Enqueue CSS
         wp_enqueue_style(
             'real-estate-scraper-admin-css',
-            $plugin_url . 'admin/css/admin.css',
+            $plugin_url . '/admin/css/admin.css',
             array(),
-            time(), // Use timestamp for cache busting
+            '1.0.0',
             'all'
         );
 
-        // Enqueue JS with proper path
+        // Enqueue JS
         wp_enqueue_script(
             'real-estate-scraper-admin-js',
-            $plugin_url . 'admin/js/admin.js',
+            $plugin_url . '/admin/js/admin.js',
             array('jquery'),
-            time(), // Use timestamp for cache busting
+            '1.0.0',
             true
         );
 
@@ -95,6 +105,8 @@ class Real_Estate_Scraper_Admin
         ));
         
         error_log('RES DEBUG - Admin scripts enqueued successfully');
+        error_log('RES DEBUG - CSS URL: ' . $plugin_url . '/admin/css/admin.css');
+        error_log('RES DEBUG - JS URL: ' . $plugin_url . '/admin/js/admin.js');
     }
 
     /**
@@ -102,37 +114,72 @@ class Real_Estate_Scraper_Admin
      */
     public function admin_page()
     {
-        error_log('RES DEBUG - Admin page loaded');
+        error_log('RES DEBUG - ===== ADMIN PAGE LOADED =====');
+        error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
+        error_log('RES DEBUG - User can manage options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
+        error_log('RES DEBUG - Request method: ' . $_SERVER['REQUEST_METHOD']);
+        error_log('RES DEBUG - POST data count: ' . count($_POST));
         error_log('RES DEBUG - POST data: ' . print_r($_POST, true));
         
-        // Handle form submission
-        if (isset($_POST['submit'])) {
-            error_log('RES DEBUG - Form submitted');
-            if (isset($_POST['res_nonce'])) {
-                error_log('RES DEBUG - Nonce found, verifying');
-                if (wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
-                    error_log('RES DEBUG - Nonce verified, saving settings');
-                    $this->save_settings();
+        // Check if we're processing a form submission
+        $is_form_submission = false;
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            error_log('RES DEBUG - POST request detected');
+            $is_form_submission = true;
+        }
+        
+        if ($is_form_submission) {
+            error_log('RES DEBUG - ===== FORM SUBMISSION DETECTED =====');
+            
+            if (isset($_POST['submit'])) {
+                error_log('RES DEBUG - Submit button found in POST');
+                
+                if (isset($_POST['res_nonce'])) {
+                    error_log('RES DEBUG - Nonce found in POST: ' . $_POST['res_nonce']);
+                    error_log('RES DEBUG - Nonce length: ' . strlen($_POST['res_nonce']));
+                    
+                    $nonce_check = wp_verify_nonce($_POST['res_nonce'], 'res_save_settings');
+                    error_log('RES DEBUG - Nonce verification result: ' . ($nonce_check ? 'VALID' : 'INVALID'));
+                    
+                    if ($nonce_check) {
+                        error_log('RES DEBUG - Nonce verified successfully, proceeding to save settings');
+                        $this->save_settings();
+                    } else {
+                        error_log('RES DEBUG - Nonce verification FAILED');
+                        echo '<div class="notice notice-error"><p>' . __('Security check failed. Please try again.', 'real-estate-scraper') . '</p></div>';
+                    }
                 } else {
-                    error_log('RES DEBUG - Nonce verification failed');
-                    echo '<div class="notice notice-error"><p>' . __('Security check failed. Please try again.', 'real-estate-scraper') . '</p></div>';
+                    error_log('RES DEBUG - No nonce found in POST data');
+                    error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
+                    echo '<div class="notice notice-error"><p>' . __('Security nonce missing. Please try again.', 'real-estate-scraper') . '</p></div>';
                 }
             } else {
-                error_log('RES DEBUG - No nonce found in POST data');
-                echo '<div class="notice notice-error"><p>' . __('Security nonce missing. Please try again.', 'real-estate-scraper') . '</p></div>';
+                error_log('RES DEBUG - No submit button found in POST');
+                error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
             }
         } else {
-            error_log('RES DEBUG - No form submission detected');
+            error_log('RES DEBUG - No form submission detected (GET request)');
         }
 
         // Get current options
         $options = get_option('real_estate_scraper_options', array());
+        error_log('RES DEBUG - Current options loaded for display: ' . print_r($options, true));
 
         // Get property statuses for mapping
         $property_statuses = get_terms(array(
             'taxonomy' => 'property_status',
             'hide_empty' => false
         ));
+        
+        error_log('RES DEBUG - Property statuses found: ' . count($property_statuses));
+        if (is_wp_error($property_statuses)) {
+            error_log('RES DEBUG - Error getting property statuses: ' . $property_statuses->get_error_message());
+            $property_statuses = array();
+        } else {
+            foreach ($property_statuses as $status) {
+                error_log('RES DEBUG - Property status: ID=' . $status->term_id . ', Name=' . $status->name);
+            }
+        }
 
         // Get cron info
         $cron = Real_Estate_Scraper_Cron::get_instance();
@@ -145,8 +192,13 @@ class Real_Estate_Scraper_Admin
             
             <div class="res-admin-container">
                 <div class="res-main-content">
-                    <form method="post" action="">
-                        <?php wp_nonce_field('res_save_settings', 'res_nonce'); ?>
+            <form method="post" action="">
+                <?php 
+                $nonce = wp_create_nonce('res_save_settings');
+                error_log('RES DEBUG - Generated nonce for form: ' . $nonce);
+                wp_nonce_field('res_save_settings', 'res_nonce'); 
+                error_log('RES DEBUG - Nonce field added to form');
+                ?>
                         
                         <div class="res-settings-section">
                             <h2><?php _e('Category URLs', 'real-estate-scraper'); ?></h2>
@@ -349,50 +401,114 @@ class Real_Estate_Scraper_Admin
      */
     private function save_settings()
     {
-        error_log('RES DEBUG - Save settings function called');
-        error_log('RES DEBUG - POST data: ' . print_r($_POST, true));
-
-        if (!isset($_POST['category_urls']) || !isset($_POST['category_mapping'])) {
-            error_log('RES DEBUG - Missing required POST data');
-            echo '<div class="notice notice-error"><p>' . __('Error: Invalid form data.', 'real-estate-scraper') . '</p></div>';
+        error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION CALLED =====');
+        error_log('RES DEBUG - Function entry time: ' . current_time('mysql'));
+        error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
+        error_log('RES DEBUG - User capabilities: ' . print_r(wp_get_current_user()->allcaps, true));
+        
+        // Log all POST data in detail
+        error_log('RES DEBUG - POST data received:');
+        foreach ($_POST as $key => $value) {
+            if (is_array($value)) {
+                error_log('RES DEBUG - POST[' . $key . '] = ' . print_r($value, true));
+            } else {
+                error_log('RES DEBUG - POST[' . $key . '] = ' . $value);
+            }
+        }
+        
+        // Check if required fields are present
+        $required_fields = array('category_urls', 'category_mapping');
+        $missing_fields = array();
+        
+        foreach ($required_fields as $field) {
+            if (!isset($_POST[$field])) {
+                $missing_fields[] = $field;
+            }
+        }
+        
+        if (!empty($missing_fields)) {
+            error_log('RES DEBUG - Missing required POST fields: ' . implode(', ', $missing_fields));
+            error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
+            echo '<div class="notice notice-error"><p>' . __('Error: Missing required form fields: ', 'real-estate-scraper') . implode(', ', $missing_fields) . '</p></div>';
             return;
         }
 
-        $options = array(
-            'category_urls' => array(
+        error_log('RES DEBUG - All required fields present, proceeding with sanitization');
+
+        // Sanitize and prepare options
+        $options = array();
+        
+        // Sanitize category URLs
+        if (isset($_POST['category_urls']) && is_array($_POST['category_urls'])) {
+            $options['category_urls'] = array(
                 'apartamente' => isset($_POST['category_urls']['apartamente']) ? sanitize_url($_POST['category_urls']['apartamente']) : '',
                 'garsoniere' => isset($_POST['category_urls']['garsoniere']) ? sanitize_url($_POST['category_urls']['garsoniere']) : '',
                 'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
                 'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
-            ),
-            'category_mapping' => array(
+            );
+            error_log('RES DEBUG - Category URLs sanitized: ' . print_r($options['category_urls'], true));
+        }
+        
+        // Sanitize category mapping
+        if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
+            $options['category_mapping'] = array(
                 'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
                 'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
                 'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
                 'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
-            ),
-            'cron_interval' => isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly',
-            'properties_to_check' => isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10,
-            'default_status' => isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft',
-            'retry_attempts' => 2,
-            'retry_interval' => 30
-        );
+            );
+            error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
+        }
+        
+        // Other options
+        $options['cron_interval'] = isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly';
+        $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
+        $options['default_status'] = isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft';
+        $options['retry_attempts'] = 2;
+        $options['retry_interval'] = 30;
+        
+        error_log('RES DEBUG - Final options array: ' . print_r($options, true));
 
+        // Get current options for comparison
+        $current_options = get_option('real_estate_scraper_options', array());
+        error_log('RES DEBUG - Current options: ' . print_r($current_options, true));
+        
+        // Check if options actually changed
+        $options_changed = ($current_options !== $options);
+        error_log('RES DEBUG - Options changed: ' . ($options_changed ? 'YES' : 'NO'));
+
+        // Update options
+        error_log('RES DEBUG - Calling update_option...');
         $result = update_option('real_estate_scraper_options', $options);
-
-        error_log('RES DEBUG - Update option result: ' . ($result ? 'SUCCESS' : 'FAILED'));
-        error_log('RES DEBUG - Options to save: ' . print_r($options, true));
+        error_log('RES DEBUG - update_option result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+        error_log('RES DEBUG - update_option return value: ' . var_export($result, true));
 
         if ($result) {
+            error_log('RES DEBUG - Settings updated successfully, updating cron schedule...');
             // Update cron schedule
             $cron = Real_Estate_Scraper_Cron::get_instance();
             $cron->update_cron_interval($options['cron_interval']);
-
-            error_log('RES DEBUG - Settings saved successfully');
+            error_log('RES DEBUG - Cron schedule updated');
+            
+            // Verify the options were actually saved
+            $saved_options = get_option('real_estate_scraper_options', array());
+            error_log('RES DEBUG - Verified saved options: ' . print_r($saved_options, true));
+            
             echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
         } else {
-            error_log('RES DEBUG - Settings were not changed');
-            echo '<div class="notice notice-warning"><p>' . __('Settings were not changed.', 'real-estate-scraper') . '</p></div>';
+            error_log('RES DEBUG - update_option returned false - settings may not have changed or there was an error');
+            
+            // Double check if options are actually the same
+            $saved_options = get_option('real_estate_scraper_options', array());
+            if ($saved_options === $options) {
+                error_log('RES DEBUG - Options are identical to what was saved - no change needed');
+                echo '<div class="notice notice-warning"><p>' . __('Settings were not changed (identical to current values).', 'real-estate-scraper') . '</p></div>';
+            } else {
+                error_log('RES DEBUG - Options are different but update_option failed - this is an error');
+                echo '<div class="notice notice-error"><p>' . __('Error: Failed to save settings. Please try again.', 'real-estate-scraper') . '</p></div>';
+            }
         }
+        
+        error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION COMPLETED =====');
     }
 }
