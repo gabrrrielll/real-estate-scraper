@@ -198,26 +198,10 @@ class Real_Estate_Scraper_Admin
             error_log('RES DEBUG - No form submission detected (GET request or empty POST)');
         }
 
-        // Get current options - force refresh from database
+        // Get current options - force refresh from database for display
         wp_cache_delete('real_estate_scraper_options', 'options');
-        wp_cache_flush(); // Clear all cache
         $options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Current options loaded for display (after cache clear): ' . print_r($options, true));
-        
-        // If still showing old values, try direct database query
-        if (isset($options['category_urls']['apartamente']) && $options['category_urls']['apartamente'] === 'https://example.com/apartamente') {
-            error_log('RES DEBUG - Still showing old values, trying direct DB query');
-            global $wpdb;
-            $db_options = $wpdb->get_var($wpdb->prepare("SELECT option_value FROM {$wpdb->options} WHERE option_name = %s", 'real_estate_scraper_options'));
-            if ($db_options) {
-                $db_options = maybe_unserialize($db_options);
-                error_log('RES DEBUG - Direct DB query result: ' . print_r($db_options, true));
-                if ($db_options && is_array($db_options)) {
-                    $options = $db_options;
-                    error_log('RES DEBUG - Using direct DB values');
-                }
-            }
-        }
+        error_log('RES DEBUG - Current options loaded for display (after targeted cache delete): ' . print_r($options, true));
 
         // Get property statuses for mapping
         $property_statuses = get_terms(array(
@@ -562,7 +546,7 @@ class Real_Estate_Scraper_Admin
             }
 
             echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
-            
+
             // Force redirect to clear any caching issues
             error_log('RES DEBUG - Redirecting to clear cache');
             wp_redirect(admin_url('admin.php?page=real-estate-scraper&settings-saved=1'));
