@@ -423,17 +423,12 @@ class Real_Estate_Scraper_Admin
         // Call the actual save settings logic
         $this->save_settings();
 
+        // After saving, reload options to ensure we have the latest data for verification
+        wp_cache_delete('real_estate_scraper_options', 'options');
+        $options = get_option('real_estate_scraper_options', array()); // This will now fetch the fresh data
+
         // Determine redirect URL
         $redirect_url = admin_url('admin.php?page=real-estate-scraper');
-        $options = get_option('real_estate_scraper_options', array()); // Get latest options to verify
-
-        // Check if settings were actually saved (based on previous logs, update_option returns true)
-        // We'll assume if save_settings() ran, it attempted to save.
-        // The issue is with the display/redirect.
-        if (isset($_GET['settings-saved']) && $_GET['settings-saved'] == '1') {
-            // This block is for display logic only, not for determining save success
-        }
-
         // The save_settings() function already logs if options match.
         // We'll check if the options in the DB match the POST data for a more robust check.
         $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
@@ -471,7 +466,7 @@ class Real_Estate_Scraper_Admin
             ob_clean();
             error_log('RES DEBUG - Output buffer cleaned before redirect.');
         }
-        
+
         wp_redirect($redirect_url);
         exit;
     }
