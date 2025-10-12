@@ -159,6 +159,14 @@ class Real_Estate_Scraper_Admin
         $options = get_option('real_estate_scraper_options', array());
         error_log('RES DEBUG - Current options loaded for display (after targeted cache delete): ' . print_r($options, true));
 
+        // Debugging: Log options values right before form rendering
+        error_log('RES DEBUG - Options values just before form rendering:');
+        error_log('RES DEBUG - URL Apartamente: ' . ($options['category_urls']['apartamente'] ?? 'N/A'));
+        error_log('RES DEBUG - Mapping Apartamente: ' . ($options['category_mapping']['apartamente'] ?? 'N/A'));
+        error_log('RES DEBUG - Cron Interval: ' . ($options['cron_interval'] ?? 'N/A'));
+        error_log('RES DEBUG - Properties to Check: ' . ($options['properties_to_check'] ?? 'N/A'));
+        error_log('RES DEBUG - Default Status: ' . ($options['default_status'] ?? 'N/A'));
+
         // Get property statuses for mapping
         $property_statuses = get_terms(array(
             'taxonomy' => 'property_status',
@@ -597,4 +605,4 @@ class Real_Estate_Scraper_Admin
 
         error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION COMPLETED =====');
     }
-}?>
+}
