@@ -31,9 +31,7 @@ class Real_Estate_Scraper_Admin
         // Add custom cron intervals
         add_filter('cron_schedules', array($this, 'add_cron_intervals'));
 
-        // Load inline admin assets
-        add_action('admin_head', array($this, 'inline_admin_assets_head'));
-        add_action('admin_footer', array($this, 'inline_admin_assets_footer'));
+        // No hooks needed - assets will be loaded directly in admin page
 
         error_log('RES DEBUG - Admin class hooks added');
     }
@@ -48,79 +46,42 @@ class Real_Estate_Scraper_Admin
     }
 
     /**
-     * Inline admin assets - CSS in head
+     * Add inline assets directly in admin page
      */
-    public function inline_admin_assets_head()
+    public function add_inline_assets()
     {
-        // Only load on our admin page
-        $screen = get_current_screen();
-        if (!$screen || strpos($screen->id, 'real-estate-scraper') === false) {
-            return;
-        }
-
-        error_log('RES DEBUG - Loading inline CSS for screen: ' . $screen->id);
-
+        error_log('RES DEBUG - Adding inline assets');
+        
         // CSS
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
-        error_log('RES DEBUG - CSS path: ' . $css_path);
-        error_log('RES DEBUG - CSS file exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
-
         if (file_exists($css_path)) {
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
             echo '</style>';
-            error_log('RES DEBUG - CSS loaded inline successfully');
-        } else {
-            error_log('RES DEBUG - CSS file not found at: ' . $css_path);
+            error_log('RES DEBUG - CSS loaded inline');
         }
-    }
-
-    /**
-     * Inline admin assets - JS in footer
-     */
-    public function inline_admin_assets_footer()
-    {
-        // Only load on our admin page
-        $screen = get_current_screen();
-        if (!$screen || strpos($screen->id, 'real-estate-scraper') === false) {
-            return;
-        }
-
-        error_log('RES DEBUG - Loading inline JS for screen: ' . $screen->id);
-
-        // JavaScript
+        
+        // JS Configuration
+        echo '<script type="text/javascript">';
+        echo 'window.realEstateScraper = ' . json_encode(array(
+            'ajaxUrl' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('res_nonce'),
+            'strings' => array(
+                'running' => __('Running...', 'real-estate-scraper'),
+                'success' => __('Success!', 'real-estate-scraper'),
+                'error' => __('Error!', 'real-estate-scraper'),
+                'confirm' => __('Are you sure?', 'real-estate-scraper')
+            )
+        )) . ';';
+        echo '</script>';
+        
+        // JS Code
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
-        error_log('RES DEBUG - JS path: ' . $js_path);
-        error_log('RES DEBUG - JS file exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
-
         if (file_exists($js_path)) {
-            // First output the localized data in a separate script block
             echo '<script type="text/javascript">';
-            echo 'window.realEstateScraper = ' . json_encode(array(
-                'ajaxUrl' => admin_url('admin-ajax.php'),
-                'nonce' => wp_create_nonce('res_nonce'),
-                'strings' => array(
-                    'running' => __('Running...', 'real-estate-scraper'),
-                    'success' => __('Success!', 'real-estate-scraper'),
-                    'error' => __('Error!', 'real-estate-scraper'),
-                    'confirm' => __('Are you sure?', 'real-estate-scraper')
-                )
-            )) . ';';
-            echo '</script>';
-            
-            // Then output the main JS file with safety checks
-            echo '<script type="text/javascript">';
-            echo '(function() {';
-            echo 'if (typeof window.realEstateScraper === "undefined") {';
-            echo 'console.error("Real Estate Scraper: Configuration not loaded");';
-            echo 'return;';
-            echo '}';
             echo file_get_contents($js_path);
-            echo '})();';
             echo '</script>';
-            error_log('RES DEBUG - JS loaded inline successfully');
-        } else {
-            error_log('RES DEBUG - JS file not found at: ' . $js_path);
+            error_log('RES DEBUG - JS loaded inline');
         }
     }
 
@@ -221,6 +182,8 @@ class Real_Estate_Scraper_Admin
         ?>
         <div class="wrap">
             <h1><?php _e('Real Estate Scraper', 'real-estate-scraper'); ?></h1>
+            
+            <?php $this->add_inline_assets(); ?>
             
             <div class="res-admin-container">
                 <div class="res-main-content">
