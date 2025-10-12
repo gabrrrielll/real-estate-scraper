@@ -47,12 +47,26 @@ class Real_Estate_Scraper_Admin
      */
     public function enqueue_admin_scripts($hook)
     {
-        // Debug: Log the hook to see what we're getting
-        error_log('Admin hook: ' . $hook);
+        // Debug: Log the hook and plugin constants
+        error_log('RES DEBUG - Admin hook: ' . $hook);
+        error_log('RES DEBUG - Plugin URL: ' . REAL_ESTATE_SCRAPER_PLUGIN_URL);
+        error_log('RES DEBUG - Plugin Dir: ' . REAL_ESTATE_SCRAPER_PLUGIN_DIR);
+        error_log('RES DEBUG - CSS Path: ' . REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/css/admin.css');
+        error_log('RES DEBUG - JS Path: ' . REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/js/admin.js');
+        
+        // Check if files exist
+        $css_file = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
+        $js_file = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
+        
+        error_log('RES DEBUG - CSS file exists: ' . (file_exists($css_file) ? 'YES' : 'NO'));
+        error_log('RES DEBUG - JS file exists: ' . (file_exists($js_file) ? 'YES' : 'NO'));
         
         if (strpos($hook, 'real-estate-scraper') === false) {
+            error_log('RES DEBUG - Hook does not contain real-estate-scraper, skipping');
             return;
         }
+
+        error_log('RES DEBUG - Enqueueing CSS and JS files');
 
         // Enqueue CSS
         wp_enqueue_style(
@@ -83,6 +97,8 @@ class Real_Estate_Scraper_Admin
                 'confirm' => __('Are you sure?', 'real-estate-scraper')
             )
         ));
+        
+        error_log('RES DEBUG - CSS and JS enqueued successfully');
     }
 
     /**
@@ -90,9 +106,18 @@ class Real_Estate_Scraper_Admin
      */
     public function admin_page()
     {
+        error_log('RES DEBUG - Admin page loaded');
+        
         // Handle form submission
-        if (isset($_POST['submit']) && isset($_POST['res_nonce']) && wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
-            $this->save_settings();
+        if (isset($_POST['submit']) && isset($_POST['res_nonce'])) {
+            error_log('RES DEBUG - Form submitted, verifying nonce');
+            if (wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
+                error_log('RES DEBUG - Nonce verified, saving settings');
+                $this->save_settings();
+            } else {
+                error_log('RES DEBUG - Nonce verification failed');
+                echo '<div class="notice notice-error"><p>' . __('Security check failed. Please try again.', 'real-estate-scraper') . '</p></div>';
+            }
         }
 
         // Get current options
@@ -319,7 +344,11 @@ class Real_Estate_Scraper_Admin
      */
     private function save_settings()
     {
+        error_log('RES DEBUG - Save settings function called');
+        error_log('RES DEBUG - POST data: ' . print_r($_POST, true));
+        
         if (!isset($_POST['category_urls']) || !isset($_POST['category_mapping'])) {
+            error_log('RES DEBUG - Missing required POST data');
             echo '<div class="notice notice-error"><p>' . __('Error: Invalid form data.', 'real-estate-scraper') . '</p></div>';
             return;
         }
@@ -345,14 +374,19 @@ class Real_Estate_Scraper_Admin
         );
 
         $result = update_option('real_estate_scraper_options', $options);
+        
+        error_log('RES DEBUG - Update option result: ' . ($result ? 'SUCCESS' : 'FAILED'));
+        error_log('RES DEBUG - Options to save: ' . print_r($options, true));
 
         if ($result) {
             // Update cron schedule
             $cron = Real_Estate_Scraper_Cron::get_instance();
             $cron->update_cron_interval($options['cron_interval']);
 
+            error_log('RES DEBUG - Settings saved successfully');
             echo '<div class="notice notice-success"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
         } else {
+            error_log('RES DEBUG - Settings were not changed');
             echo '<div class="notice notice-warning"><p>' . __('Settings were not changed.', 'real-estate-scraper') . '</p></div>';
         }
     }

@@ -60,6 +60,7 @@ class Real_Estate_Scraper
 
     private function __construct()
     {
+        error_log('RES DEBUG - Real Estate Scraper plugin constructor called');
         $this->init_hooks();
     }
 
@@ -72,7 +73,7 @@ class Real_Estate_Scraper
         // Initialize components
         add_action('init', array($this, 'init'));
         add_action('admin_menu', array($this, 'add_admin_menu'));
-        
+
         // AJAX handlers
         add_action('wp_ajax_res_run_scraper', array($this, 'ajax_run_scraper'));
         add_action('wp_ajax_res_get_logs', array($this, 'ajax_get_logs'));
@@ -82,13 +83,18 @@ class Real_Estate_Scraper
 
     public function init()
     {
+        error_log('RES DEBUG - Plugin init function called');
+        
         // Load text domain
         load_plugin_textdomain('real-estate-scraper', false, dirname(plugin_basename(__FILE__)) . '/languages');
-
+        
         // Initialize components
+        error_log('RES DEBUG - Initializing components');
         Real_Estate_Scraper_Logger::get_instance();
         Real_Estate_Scraper_Admin::get_instance();
         Real_Estate_Scraper_Cron::get_instance();
+        
+        error_log('RES DEBUG - All components initialized');
     }
 
     public function activate()
@@ -141,6 +147,8 @@ class Real_Estate_Scraper
 
     public function add_admin_menu()
     {
+        error_log('RES DEBUG - Adding admin menu');
+        
         add_menu_page(
             __('Real Estate Scraper', 'real-estate-scraper'),
             __('Real Estate Scraper', 'real-estate-scraper'),
@@ -150,6 +158,8 @@ class Real_Estate_Scraper
             'dashicons-download',
             30
         );
+        
+        error_log('RES DEBUG - Admin menu added');
     }
 
     public function ajax_run_scraper()
@@ -194,7 +204,7 @@ class Real_Estate_Scraper
 
         wp_send_json($result);
     }
-    
+
     public function ajax_test_cron()
     {
         check_ajax_referer('res_nonce', 'nonce');
