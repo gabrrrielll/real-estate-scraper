@@ -94,9 +94,9 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - JS file exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
 
         if (file_exists($js_path)) {
-            // First output the localized data
+            // First output the localized data in a separate script block
             echo '<script type="text/javascript">';
-            echo 'var realEstateScraper = ' . json_encode(array(
+            echo 'window.realEstateScraper = ' . json_encode(array(
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('res_nonce'),
                 'strings' => array(
@@ -107,10 +107,16 @@ class Real_Estate_Scraper_Admin
                 )
             )) . ';';
             echo '</script>';
-
-            // Then output the main JS file
+            
+            // Then output the main JS file with safety checks
             echo '<script type="text/javascript">';
+            echo '(function() {';
+            echo 'if (typeof window.realEstateScraper === "undefined") {';
+            echo 'console.error("Real Estate Scraper: Configuration not loaded");';
+            echo 'return;';
+            echo '}';
             echo file_get_contents($js_path);
+            echo '})();';
             echo '</script>';
             error_log('RES DEBUG - JS loaded inline successfully');
         } else {

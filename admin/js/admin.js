@@ -57,11 +57,11 @@ jQuery(document).ready(function ($) {
 
         // Make AJAX request
         $.ajax({
-            url: realEstateScraper.ajaxUrl,
+            url: window.realEstateScraper.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'res_run_scraper',
-                nonce: realEstateScraper.nonce
+                nonce: window.realEstateScraper.nonce
             },
             success: function (response) {
                 if (response.success) {
@@ -97,11 +97,11 @@ jQuery(document).ready(function ($) {
         button.addClass('res-button-loading').prop('disabled', true);
 
         $.ajax({
-            url: realEstateScraper.ajaxUrl,
+            url: window.realEstateScraper.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'res_test_cron',
-                nonce: realEstateScraper.nonce
+                nonce: window.realEstateScraper.nonce
             },
             success: function (response) {
                 if (response.success) {
@@ -121,11 +121,11 @@ jQuery(document).ready(function ($) {
 
     function refreshLogs() {
         $.ajax({
-            url: realEstateScraper.ajaxUrl,
+            url: window.realEstateScraper.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'res_get_logs',
-                nonce: realEstateScraper.nonce
+                nonce: window.realEstateScraper.nonce
             },
             success: function (response) {
                 if (response && response.length > 0) {
@@ -141,7 +141,7 @@ jQuery(document).ready(function ($) {
     }
 
     function cleanLogs() {
-        if (!confirm(realEstateScraper.strings.confirm + ' This will delete log files older than 4 days.')) {
+        if (!confirm(window.realEstateScraper.strings.confirm + ' This will delete log files older than 4 days.')) {
             return;
         }
 
@@ -149,11 +149,11 @@ jQuery(document).ready(function ($) {
         button.addClass('res-button-loading').prop('disabled', true);
 
         $.ajax({
-            url: realEstateScraper.ajaxUrl,
+            url: window.realEstateScraper.ajaxUrl,
             type: 'POST',
             data: {
                 action: 'res_clean_logs',
-                nonce: realEstateScraper.nonce
+                nonce: window.realEstateScraper.nonce
             },
             success: function (response) {
                 if (response.success) {
