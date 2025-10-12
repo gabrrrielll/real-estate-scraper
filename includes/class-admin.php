@@ -34,6 +34,8 @@ class Real_Estate_Scraper_Admin
         // Ensure jQuery is loaded in admin
         add_action('admin_enqueue_scripts', array($this, 'enqueue_jquery'));
 
+        add_action('admin_post_res_save_settings', array($this, 'handle_save_settings'));
+        
         error_log('RES DEBUG - Admin class hooks added');
     }
 
@@ -147,56 +149,8 @@ class Real_Estate_Scraper_Admin
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-        // Check if we're processing a form submission
-        $is_form_submission = false;
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && !empty($_POST)) {
-            error_log('RES DEBUG - POST request detected with data');
-            $is_form_submission = true;
-        }
-
-        if ($is_form_submission) {
-            error_log('RES DEBUG - ===== FORM SUBMISSION DETECTED =====');
-            error_log('RES DEBUG - Full POST data: ' . print_r($_POST, true));
-
-            if (isset($_POST['submit'])) {
-                error_log('RES DEBUG - Submit button found in POST');
-
-                if (isset($_POST['res_nonce'])) {
-                    error_log('RES DEBUG - Nonce found in POST: ' . $_POST['res_nonce']);
-                    error_log('RES DEBUG - Nonce length: ' . strlen($_POST['res_nonce']));
-
-                    // Check nonce
-                    $nonce_check = wp_verify_nonce($_POST['res_nonce'], 'res_save_settings');
-                    error_log('RES DEBUG - Nonce verification result: ' . var_export($nonce_check, true));
-
-                    if ($nonce_check) {
-                        error_log('RES DEBUG - ===== NONCE VERIFIED - CALLING SAVE_SETTINGS =====');
-                        $this->save_settings();
-                        error_log('RES DEBUG - ===== SAVE_SETTINGS RETURNED =====');
-                    } else {
-                        error_log('RES DEBUG - Nonce verification FAILED');
-                        echo '<div class="notice notice-error"><p>' . __('Security check failed. Please try again.', 'real-estate-scraper') . '</p></div>';
-                    }
-                } else {
-                    error_log('RES DEBUG - No nonce found in POST data');
-                    error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
-                    echo '<div class="notice notice-error"><p>' . __('Security nonce missing. Please try again.', 'real-estate-scraper') . '</p></div>';
-                }
-            } else {
-                error_log('RES DEBUG - No submit button found in POST');
-                error_log('RES DEBUG - Looking for these keys: ' . implode(', ', array_keys($_POST)));
-
-                // Check for alternative submit names
-                $submit_keys = array_filter(array_keys($_POST), function ($key) {
-                    return strpos($key, 'submit') !== false;
-                });
-                if (!empty($submit_keys)) {
-                    error_log('RES DEBUG - Found submit-like keys: ' . implode(', ', $submit_keys));
-                }
-            }
-        } else {
-            error_log('RES DEBUG - No form submission detected (GET request or empty POST)');
-        }
+        // No direct form processing here, it's handled by admin_post hook
+        error_log('RES DEBUG - Admin page loaded. Form processing handled by admin_post.');
 
         // Get current options - force refresh from database for display
         wp_cache_delete('real_estate_scraper_options', 'options');
@@ -232,7 +186,8 @@ class Real_Estate_Scraper_Admin
             
             <div class="res-admin-container">
                 <div class="res-main-content">
-            <form method="post" action="">
+            <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
+                <input type="hidden" name="action" value="res_save_settings" />
                 <?php
                 $nonce = wp_create_nonce('res_save_settings');
         error_log('RES DEBUG - Generated nonce for form: ' . $nonce);
@@ -437,6 +392,35 @@ class Real_Estate_Scraper_Admin
     }
 
     /**
+     * Handle form submission for saving settings
+     */
+    public function handle_save_settings()
+    {
+        error_log('RES DEBUG - ===== HANDLE_SAVE_SETTINGS CALLED VIA ADMIN_POST HOOK =====');
+        
+        // Verify nonce
+        if (!isset($_POST['res_nonce']) || !wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
+            error_log('RES DEBUG - Nonce verification failed in handle_save_settings');
+            wp_die(__('Security check failed. Please try again.', 'real-estate-scraper'));
+        }
+
+        // Check permissions
+        if (!current_user_can('manage_options')) {
+            error_log('RES DEBUG - User does not have manage_options capability in handle_save_settings');
+            wp_die(__('You do not have sufficient permissions to save settings.', 'real-estate-scraper'));
+        }
+
+        // Call the actual save settings logic
+        $this->save_settings();
+
+        // Redirect back to the settings page with a success message
+        $redirect_url = admin_url('admin.php?page=real-estate-scraper&settings-saved=1');
+        error_log('RES DEBUG - Redirecting after save to: ' . $redirect_url);
+        wp_redirect($redirect_url);
+        exit;
+    }
+
+    /**
      * Save settings
      */
     private function save_settings()
@@ -469,7 +453,7 @@ class Real_Estate_Scraper_Admin
         if (!empty($missing_fields)) {
             error_log('RES DEBUG - Missing required POST fields: ' . implode(', ', $missing_fields));
             error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
-            echo '<div class="notice notice-error"><p>' . __('Error: Missing required form fields: ', 'real-estate-scraper') . implode(', ', $missing_fields) . '</p></div>';
+            // No echo here, redirect happens in handle_save_settings
             return;
         }
 
@@ -535,7 +519,7 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - Saved options match what we tried to save: ' . ($options_match ? 'YES' : 'NO'));
 
         if ($options_match) {
-            error_log('RES DEBUG - Settings saved successfully, updating cron schedule...');
+            error_log('RES DEBUG - Settings updated successfully, updating cron schedule...');
             // Update cron schedule
             try {
                 $cron = Real_Estate_Scraper_Cron::get_instance();
@@ -544,27 +528,22 @@ class Real_Estate_Scraper_Admin
             } catch (Exception $e) {
                 error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
             }
-
-            echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
-
-            // Force redirect to clear any caching issues
-            error_log('RES DEBUG - Redirecting to clear cache');
-            wp_redirect(admin_url('admin.php?page=real-estate-scraper&settings-saved=1'));
-            exit;
+            
+            // No echo here, redirect happens in handle_save_settings
         } else {
             error_log('RES DEBUG - Settings were not saved correctly');
             error_log('RES DEBUG - Difference: Expected=' . print_r($options, true) . ' Got=' . print_r($saved_options, true));
-
+            
             // Try to save again with autoload = yes
             error_log('RES DEBUG - Trying to save again with autoload=yes');
             $result2 = update_option('real_estate_scraper_options', $options, true);
             error_log('RES DEBUG - Second attempt result: ' . var_export($result2, true));
-
+            
             $saved_options2 = get_option('real_estate_scraper_options', array());
             if ($saved_options2 == $options) {
-                echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully on second attempt!', 'real-estate-scraper') . '</p></div>';
+                // No echo here, redirect happens in handle_save_settings
             } else {
-                echo '<div class="notice notice-error is-dismissible"><p>' . __('Error: Failed to save settings. Please check the error logs.', 'real-estate-scraper') . '</p></div>';
+                // No echo here, redirect happens in handle_save_settings
             }
         }
 
