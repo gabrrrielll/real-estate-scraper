@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Debug file for Real Estate Scraper
  * Access this file directly to check plugin status
@@ -93,12 +94,11 @@ echo "<h2>CSS/JS URLs</h2>";
 if (defined('REAL_ESTATE_SCRAPER_PLUGIN_URL')) {
     echo "<p><strong>CSS URL:</strong> " . REAL_ESTATE_SCRAPER_PLUGIN_URL . "admin/css/admin.css</p>";
     echo "<p><strong>JS URL:</strong> " . REAL_ESTATE_SCRAPER_PLUGIN_URL . "admin/js/admin.js</p>";
-    
+
     // Test URLs
     $css_url = REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/css/admin.css';
     $js_url = REAL_ESTATE_SCRAPER_PLUGIN_URL . 'admin/js/admin.js';
-    
+
     echo "<p><strong>CSS Accessible:</strong> " . (file_get_contents($css_url) !== false ? 'YES' : 'NO') . "</p>";
     echo "<p><strong>JS Accessible:</strong> " . (file_get_contents($js_url) !== false ? 'YES' : 'NO') . "</p>";
 }
-?>

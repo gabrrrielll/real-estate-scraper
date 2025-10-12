@@ -53,7 +53,10 @@ class Real_Estate_Scraper
     public static function get_instance()
     {
         if (null === self::$instance) {
+            error_log('RES DEBUG - Creating new plugin instance');
             self::$instance = new self();
+        } else {
+            error_log('RES DEBUG - Returning existing plugin instance');
         }
         return self::$instance;
     }
@@ -84,16 +87,16 @@ class Real_Estate_Scraper
     public function init()
     {
         error_log('RES DEBUG - Plugin init function called');
-        
+
         // Load text domain
         load_plugin_textdomain('real-estate-scraper', false, dirname(plugin_basename(__FILE__)) . '/languages');
-        
+
         // Initialize components
         error_log('RES DEBUG - Initializing components');
         Real_Estate_Scraper_Logger::get_instance();
         Real_Estate_Scraper_Admin::get_instance();
         Real_Estate_Scraper_Cron::get_instance();
-        
+
         error_log('RES DEBUG - All components initialized');
     }
 
@@ -149,7 +152,7 @@ class Real_Estate_Scraper
     {
         error_log('RES DEBUG - Adding admin menu');
         
-        add_menu_page(
+        $hook = add_menu_page(
             __('Real Estate Scraper', 'real-estate-scraper'),
             __('Real Estate Scraper', 'real-estate-scraper'),
             'manage_options',
@@ -159,7 +162,7 @@ class Real_Estate_Scraper
             30
         );
         
-        error_log('RES DEBUG - Admin menu added');
+        error_log('RES DEBUG - Admin menu added with hook: ' . $hook);
     }
 
     public function ajax_run_scraper()
