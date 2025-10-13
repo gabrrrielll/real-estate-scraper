@@ -218,6 +218,9 @@ class Real_Estate_Scraper_Admin
                                                class="regular-text" />
                                     </td>
                                 </tr>
+                                <?php
+                                // /*
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Garsoniere', 'real-estate-scraper'); ?></th>
                                     <td>
@@ -242,6 +245,9 @@ class Real_Estate_Scraper_Admin
                                                class="regular-text" />
                                     </td>
                                 </tr>
+                                <?php
+        // */
+        ?>
                             </table>
                         </div>
                         
@@ -250,6 +256,9 @@ class Real_Estate_Scraper_Admin
                             <p class="description"><?php _e('Map each category to a property status.', 'real-estate-scraper'); ?></p>
                             
                             <table class="form-table">
+                                <?php
+        // /*
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Apartamente', 'real-estate-scraper'); ?></th>
                                     <td>
@@ -306,6 +315,9 @@ class Real_Estate_Scraper_Admin
                                         </select>
                                     </td>
                                 </tr>
+                                <?php
+        // */
+        ?>
                             </table>
                         </div>
                         
@@ -313,19 +325,22 @@ class Real_Estate_Scraper_Admin
                             <h2><?php _e('Scraper Settings', 'real-estate-scraper'); ?></h2>
                             
                             <table class="form-table">
+                                <?php
+        // /*
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Cron Interval', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <select name="cron_interval">
                                             <?php
-                                    $intervals = array(
-                                        '15min' => __('Every 15 minutes', 'real-estate-scraper'),
-                                        '30min' => __('Every 30 minutes', 'real-estate-scraper'),
-                                        'hourly' => __('Every hour', 'real-estate-scraper'),
-                                        '6hours' => __('Every 6 hours', 'real-estate-scraper'),
-                                        '12hours' => __('Every 12 hours', 'real-estate-scraper'),
-                                        'daily' => __('Daily', 'real-estate-scraper')
-                                    );
+            $intervals = array(
+                '15min' => __('Every 15 minutes', 'real-estate-scraper'),
+                '30min' => __('Every 30 minutes', 'real-estate-scraper'),
+                'hourly' => __('Every hour', 'real-estate-scraper'),
+                '6hours' => __('Every 6 hours', 'real-estate-scraper'),
+                '12hours' => __('Every 12 hours', 'real-estate-scraper'),
+                'daily' => __('Daily', 'real-estate-scraper')
+            );
         foreach ($intervals as $value => $label):
             ?>
                                                 <option value="<?php echo $value; ?>" 
@@ -358,6 +373,9 @@ class Real_Estate_Scraper_Admin
                                         </select>
                                     </td>
                                 </tr>
+                                <?php
+                                // */
+        ?>
                             </table>
                         </div>
                         
@@ -436,25 +454,29 @@ class Real_Estate_Scraper_Admin
 
         // The save_settings() function already logs if options match.
         // We'll check if the options in the DB match the POST data for a more robust check.
-        $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
-        $post_category_mapping = isset($_POST['category_mapping']) ? array_map('intval', $_POST['category_mapping']) : [];
-        $post_cron_interval = isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly';
-        $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
-        $post_default_status = isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft';
+        $post_category_urls = isset($_POST['category_urls']) ? $_POST['category_urls'] : []; // Removed sanitize_url
+        $post_category_mapping = []; // Commented out
+        $post_cron_interval = 'hourly'; // Commented out, set to default
+        $post_properties_to_check = 10; // Commented out, set to default
+        $post_default_status = 'draft'; // Commented out, set to default
 
         $db_category_urls = $options['category_urls'] ?? [];
-        $db_category_mapping = $options['category_mapping'] ?? [];
-        $db_cron_interval = $options['cron_interval'] ?? 'hourly';
-        $db_properties_to_check = $options['properties_to_check'] ?? 10;
-        $db_default_status = $options['default_status'] ?? 'draft';
+        $db_category_mapping = []; // Commented out
+        $db_cron_interval = 'hourly'; // Commented out, set to default
+        $db_properties_to_check = 10; // Commented out, set to default
+        $db_default_status = 'draft'; // Commented out, set to default
 
         $save_successful = (
-            $post_category_urls == $db_category_urls &&
-            $post_category_mapping == $db_category_mapping &&
-            $post_cron_interval == $db_cron_interval &&
-            $post_properties_to_check == $db_properties_to_check &&
-            $post_default_status == $db_default_status
+            (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente'])
         );
+
+        // Old logic: $save_successful = (
+        //     $post_category_urls == $db_category_urls &&
+        //     $post_category_mapping == $db_category_mapping &&
+        //     $post_cron_interval == $db_cron_interval &&
+        //     $post_properties_to_check == $db_properties_to_check &&
+        //     $post_default_status == $db_default_status
+        // );
 
         if ($save_successful) {
             $redirect_url = add_query_arg('settings-saved', '1', $redirect_url);
@@ -469,7 +491,7 @@ class Real_Estate_Scraper_Admin
         // Clean (aggressively) and end output buffering
         ob_end_clean();
         error_log('RES DEBUG - Aggressive output buffer cleaned before redirect.');
-        
+
         wp_redirect($redirect_url);
         exit;
     }
@@ -495,7 +517,7 @@ class Real_Estate_Scraper_Admin
         }
 
         // Check if required fields are present
-        $required_fields = array('category_urls', 'category_mapping');
+        $required_fields = array('category_urls'); // Only category_urls is required for now
         $missing_fields = array();
 
         foreach ($required_fields as $field) {
@@ -519,29 +541,29 @@ class Real_Estate_Scraper_Admin
         // Sanitize category URLs
         if (isset($_POST['category_urls']) && is_array($_POST['category_urls'])) {
             $options['category_urls'] = array(
-                'apartamente' => isset($_POST['category_urls']['apartamente']) ? sanitize_url($_POST['category_urls']['apartamente']) : '',
-                'garsoniere' => isset($_POST['category_urls']['garsoniere']) ? sanitize_url($_POST['category_urls']['garsoniere']) : '',
-                'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
-                'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
+                'apartamente' => isset($_POST['category_urls']['apartamente']) ? $_POST['category_urls']['apartamente'] : '', // Removed sanitize_url
+                // 'garsoniere' => isset($_POST['category_urls']['garsoniere']) ? sanitize_url($_POST['category_urls']['garsoniere']) : '',
+                // 'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
+                // 'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
             );
-            error_log('RES DEBUG - Category URLs sanitized: ' . print_r($options['category_urls'], true));
+            error_log('RES DEBUG - Category URLs processed (apartamente only, no sanitization): ' . print_r($options['category_urls'], true));
         }
 
-        // Sanitize category mapping
-        if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
-            $options['category_mapping'] = array(
-                'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
-                'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
-                'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
-                'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
-            );
-            error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
-        }
+        // Sanitize category mapping (commented out)
+        // if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
+        //     $options['category_mapping'] = array(
+        //         'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
+        //         'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
+        //         'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
+        //         'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
+        //     );
+        //     error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
+        // }
 
-        // Other options
-        $options['cron_interval'] = isset($_POST['cron_interval']) ? sanitize_text_field($_POST['cron_interval']) : 'hourly';
-        $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
-        $options['default_status'] = isset($_POST['default_status']) ? sanitize_text_field($_POST['default_status']) : 'draft';
+        // Other options (commented out)
+        $options['cron_interval'] = 'hourly'; // Set to default, ignore POST
+        $options['properties_to_check'] = 10; // Set to default, ignore POST
+        $options['default_status'] = 'draft'; // Set to default, ignore POST
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 
@@ -574,14 +596,14 @@ class Real_Estate_Scraper_Admin
 
         if ($options_match) {
             error_log('RES DEBUG - Settings updated successfully, updating cron schedule...');
-            // Update cron schedule
-            try {
-                $cron = Real_Estate_Scraper_Cron::get_instance();
-                $cron->update_cron_interval($options['cron_interval']);
-                error_log('RES DEBUG - Cron schedule updated');
-            } catch (Exception $e) {
-                error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
-            }
+            // Update cron schedule (commented out conditional, will always attempt if $options_match is true)
+            // try {
+            //     $cron = Real_Estate_Scraper_Cron::get_instance();
+            //     $cron->update_cron_interval($options['cron_interval']);
+            //     error_log('RES DEBUG - Cron schedule updated');
+            // } catch (Exception $e) {
+            //     error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
+            // }
 
             // No echo here, redirect happens in handle_save_settings
         } else {

@@ -296,3 +296,4 @@ class Real_Estate_Scraper_Logger
     }
 }
 
+
