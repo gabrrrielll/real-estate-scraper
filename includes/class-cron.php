@@ -172,7 +172,6 @@ class Real_Estate_Scraper_Cron
     public function update_cron_interval($new_interval)
     {
         $this->options['cron_interval'] = $new_interval;
-        update_option('real_estate_scraper_options', $this->options);
 
         // Reschedule cron
         $this->schedule_cron();

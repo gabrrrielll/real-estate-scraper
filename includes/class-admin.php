@@ -362,7 +362,7 @@ class Real_Estate_Scraper_Admin
                                 </tr>
                                 <?php
                                 // */
-                                ?>
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Default Status', 'real-estate-scraper'); ?></th>
                                     <td>
@@ -377,7 +377,7 @@ class Real_Estate_Scraper_Admin
                                     </td>
                                 </tr>
                                 <?php
-                                // */
+        // */
         ?>
                             </table>
                         </div>
