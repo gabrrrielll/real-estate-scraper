@@ -144,11 +144,18 @@ class Real_Estate_Scraper_Mapper
         if (!empty($uploaded_images)) {
             // Set first image as featured image
             set_post_thumbnail($post_id, $uploaded_images[0]);
+            $this->logger->debug("Set featured image for post ID: {$post_id} to attachment ID: {$uploaded_images[0]}");
 
-            // Set all images in property_images meta
-            update_post_meta($post_id, 'fave_property_images', $uploaded_images);
+            // Delete any existing fave_property_images meta to ensure clean update
+            delete_post_meta($post_id, 'fave_property_images');
 
-            $this->logger->info("Successfully processed " . count($uploaded_images) . " images");
+            // Add each image ID individually to fave_property_images meta field for Houzez gallery
+            foreach ($uploaded_images as $image_id) {
+                add_post_meta($post_id, 'fave_property_images', $image_id);
+            }
+            $this->logger->debug("Added individual fave_property_images meta for post ID: {$post_id} with: " . implode(', ', $uploaded_images));
+
+            $this->logger->info("Successfully processed " . count($uploaded_images) . " images for post ID: {$post_id}");
         }
     }
 
