@@ -153,7 +153,7 @@ class Real_Estate_Scraper_Scraper
     private function get_property_urls_from_category($category_url)
     {
         $max_attempts = $this->options['retry_attempts'];
-        $retry_interval = $this->options['retry_interval'];
+        $retry_interval = RES_SCRAPER_CONFIG['retry_interval']; // Use retry_interval from constants.php
 
         for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
             try {
@@ -210,6 +210,15 @@ class Real_Estate_Scraper_Scraper
         $dom = new DOMDocument();
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
+
+        // --- TEMPORARY TEST: Log content from class="selected-ads" ---
+        $selected_ads_nodes = $xpath->query('//div[@class="selected-ads"]');
+        if ($selected_ads_nodes->length > 0) {
+            $this->logger->info("Found class=\"selected-ads\" content (temporary test): " . $selected_ads_nodes->item(0)->textContent);
+        } else {
+            $this->logger->info("class=\"selected-ads\" not found in HTML (temporary test).");
+        }
+        // --- END TEMPORARY TEST ---
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
         // Use XPath from constants file

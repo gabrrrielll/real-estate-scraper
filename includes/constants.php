@@ -38,5 +38,6 @@ define('RES_SCRAPER_CONFIG', array(
         'phone_xpath' => '//p[@id="number-phone-active-format"]',
     ),
     'single_property_test_url' => 'https://homezz.ro/apartament-cu-incalzire-in-pardoseala-si-loc-de-parcare-in-b-3789471.html', // NEW: URL for testing single property parsing
-    'base_url_for_relative_links' => 'https://homezz.ro' // Used for converting relative URLs to absolute. Update this if target site has relative links.
+    'base_url_for_relative_links' => 'https://homezz.ro', // Used for converting relative URLs to absolute. Update this if target site has relative links.
+    'retry_interval' => 60 // Added: Default retry interval in seconds for category page fetching
 ));
