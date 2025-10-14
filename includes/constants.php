@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 
 // Define the scraper configuration
 define('RES_SCRAPER_CONFIG', array(
-    'property_list_urls_xpath' => '//a[contains(@href, "/property/") or contains(@href, "/listing/") or contains(@href, "/anunt/")]',
+    'property_list_urls_xpath' => '//a[contains(@class, "card-box-link")]',
     'property_data' => array(
         'title_xpath' => '//h1 | //title',
         'content_xpath' => '//*[contains(@class, "description") or contains(@class, "content") or contains(@class, "details")]',
@@ -35,5 +35,5 @@ define('RES_SCRAPER_CONFIG', array(
         'images_xpath' => '//img[@src]',
         'phone_xpath' => '//a[contains(@href, "tel:")]', // Placeholder, needs specific XPath for each site
     ),
-    'base_url_for_relative_links' => 'https://example.com' // Used for converting relative URLs to absolute. Update this if target site has relative links.
+    'base_url_for_relative_links' => 'https://homezz.ro' // Used for converting relative URLs to absolute. Update this if target site has relative links.
 ));
