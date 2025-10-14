@@ -48,35 +48,35 @@ class Real_Estate_Scraper_Scraper
             );
 
             // --- TEMPORARY TEST: Process single property directly ---
-            $test_url = RES_SCRAPER_CONFIG['single_property_test_url'];
-            if (!empty($test_url)) {
-                $this->logger->info("--- TEMPORARY TEST: Processing single property: {$test_url} ---");
-                $result = $this->process_property($test_url, 'test_category'); // Use a dummy category key
-                if ($result['success']) {
-                    $stats['total_found'] = 1;
-                    if ($result['is_new']) {
-                        $stats['new_added'] = 1;
-                    } else {
-                        $stats['duplicates_skipped'] = 1;
-                    }
-                } else {
-                    $stats['errors'] = 1;
+            // $test_url = RES_SCRAPER_CONFIG['single_property_test_url'];
+            // if (!empty($test_url)) {
+            //     $this->logger->info("--- TEMPORARY TEST: Processing single property: {$test_url} ---");
+            //     $result = $this->process_property($test_url, 'test_category'); // Use a dummy category key
+            //     if ($result['success']) {
+            //         $stats['total_found'] = 1;
+            //         if ($result['is_new']) {
+            //             $stats['new_added'] = 1;
+            //         } else {
+            //             $stats['duplicates_skipped'] = 1;
+            //         }
+            //     } else {
+            //         $stats['errors'] = 1;
+            //     }
+            // } else {
+            // --- ORIGINAL LOGIC: Process each category ---
+            foreach ($this->options['category_urls'] as $category_key => $url) {
+                if (empty($url)) {
+                    continue;
                 }
-            } else {
-                // --- ORIGINAL LOGIC: Process each category ---
-                foreach ($this->options['category_urls'] as $category_key => $url) {
-                    if (empty($url)) {
-                        continue;
-                    }
 
-                    $category_stats = $this->process_category($category_key, $url);
+                $category_stats = $this->process_category($category_key, $url);
 
-                    $stats['total_found'] += $category_stats['found'];
-                    $stats['new_added'] += $category_stats['new'];
-                    $stats['duplicates_skipped'] += $category_stats['duplicates'];
-                    $stats['errors'] += $category_stats['errors'];
-                }
+                $stats['total_found'] += $category_stats['found'];
+                $stats['new_added'] += $category_stats['new'];
+                $stats['duplicates_skipped'] += $category_stats['duplicates'];
+                $stats['errors'] += $category_stats['errors'];
             }
+            // }
             // --- END TEMPORARY TEST ---
 
             $execution_time = round(microtime(true) - $start_time, 2);
