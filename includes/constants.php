@@ -25,15 +25,17 @@ if (!defined('ABSPATH')) {
 define('RES_SCRAPER_CONFIG', array(
     'property_list_urls_xpath' => '//div[contains(@class, "card-1")]/a[contains(@class, "card-box")]',
     'property_data' => array(
-        'title_xpath' => '//h1 | //title',
-        'content_xpath' => '//*[contains(@class, "description") or contains(@class, "content") or contains(@class, "details")]',
-        'price_xpath' => '//*[contains(@class, "price") or contains(text(), "€") or contains(text(), "EUR")]',
-        'size_xpath' => '//*[contains(text(), "mp") or contains(text(), "m²") or contains(text(), "sq")]',
-        'bedrooms_xpath' => '//*[contains(text(), "dormitor") or contains(text(), "cameră") or contains(text(), "room")]',
-        'bathrooms_xpath' => '//*[contains(text(), "baie") or contains(text(), "bathroom")]',
-        'address_xpath' => '//*[contains(@class, "address") or contains(@class, "location")]',
-        'images_xpath' => '//img[@src]',
-        'phone_xpath' => '//a[contains(@href, "tel:")]', // Placeholder, needs specific XPath for each site
+        'title_xpath' => '//h1[@data-test-id="ad-title"]',
+        'content_xpath' => '//pre[@data-test-id="ad-description"]',
+        'price_xpath' => '//div[@data-test-id="ad-price"]',
+        'size_xpath' => '//div[@class="box-attr second"]/p[@data-test-id="ad-attribute"]/span[2]',
+        // 'bedrooms_xpath' => '//*[contains(text(), "dormitor") or contains(text(), "cameră") or contains(text(), "room")]',
+        // 'bathrooms_xpath' => '//*[contains(text(), "baie") or contains(text(), "bathroom")]',
+        'address_xpath' => '//div[@id="lat"] | //div[@id="lng"]', // Now extracts lat and lng to be combined
+        'latitude_xpath' => '//div[@id="lat"]',
+        'longitude_xpath' => '//div[@id="lng"]',
+        'images_xpath' => '//div[contains(@class, "small-box-img")]//img[@src]',
+        'phone_xpath' => '//p[@id="number-phone-active-format"]',
     ),
     'base_url_for_relative_links' => 'https://homezz.ro' // Used for converting relative URLs to absolute. Update this if target site has relative links.
 ));
