@@ -166,6 +166,7 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - Cron Interval: ' . ($options['cron_interval'] ?? 'N/A'));
         error_log('RES DEBUG - Properties to Check: ' . ($options['properties_to_check'] ?? 'N/A'));
         error_log('RES DEBUG - Default Status: ' . ($options['default_status'] ?? 'N/A'));
+        error_log('RES DEBUG - Post Default Status: ' . ($_POST['default_status'] ?? 'N/A')); // NEW LOG: Added to check raw POST value
 
         // Get property statuses for mapping
         $property_statuses = get_terms(array(
@@ -576,11 +577,11 @@ class Real_Estate_Scraper_Admin
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 
-        error_log('RES DEBUG - Final options array: ' . print_r($options, true));
+        error_log('RES DEBUG - Final options array (before saving): ' . print_r($options, true)); // Modified log message
 
         // Get current options for comparison
         $current_options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Current options: ' . print_r($current_options, true));
+        error_log('RES DEBUG - Current options (before update): ' . print_r($current_options, true)); // Modified log message
 
         // Check if options actually changed
         $options_changed = ($current_options !== $options);
