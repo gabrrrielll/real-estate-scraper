@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 
 // Define the scraper configuration
 define('RES_SCRAPER_CONFIG', array(
-    'property_list_urls_xpath' => '//a[contains(@class, "card-box-link")]',
+    'property_list_urls_xpath' => '//div[contains(@class, "card-1")]/a[contains(@class, "card-box")]',
     'property_data' => array(
         'title_xpath' => '//h1 | //title',
         'content_xpath' => '//*[contains(@class, "description") or contains(@class, "content") or contains(@class, "details")]',
