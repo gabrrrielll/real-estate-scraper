@@ -459,14 +459,14 @@ class Real_Estate_Scraper_Admin
         // We'll check if the options in the DB match the POST data for a more robust check.
         $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
         $post_category_mapping = []; // Commented out
-        $post_cron_interval = 'hourly'; // Commented out, set to default
-        $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10; // Activated, no sanitization (intval is type cast)
+        $post_cron_interval = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly'; // Activated, no sanitization
+        $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $post_default_status = 'draft'; // Commented out, set to default
 
         $db_category_urls = $options['category_urls'] ?? [];
         $db_category_mapping = []; // Commented out
-        $db_cron_interval = 'hourly'; // Commented out, set to default
-        $db_properties_to_check = $options['properties_to_check'] ?? 10; // Activated
+        $db_cron_interval = $options['cron_interval'] ?? 'hourly'; // Activated
+        $db_properties_to_check = $options['properties_to_check'] ?? 10;
         $db_default_status = 'draft'; // Commented out, set to default
 
         $save_successful = (
@@ -474,7 +474,8 @@ class Real_Estate_Scraper_Admin
             (isset($post_category_urls['garsoniere']) && isset($db_category_urls['garsoniere']) && $post_category_urls['garsoniere'] == $db_category_urls['garsoniere']) &&
             (isset($post_category_urls['case_vile']) && isset($db_category_urls['case_vile']) && $post_category_urls['case_vile'] == $db_category_urls['case_vile']) &&
             (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']) &&
-            ($post_properties_to_check == $db_properties_to_check) // Added for Properties to Check
+            ($post_properties_to_check == $db_properties_to_check) && // Added for Properties to Check
+            ($post_cron_interval == $db_cron_interval) // Added for Cron Interval
         );
 
         // Old logic: $save_successful = (
@@ -524,7 +525,7 @@ class Real_Estate_Scraper_Admin
         }
 
         // Check if required fields are present
-        $required_fields = array('category_urls', 'properties_to_check'); // Added properties_to_check
+        $required_fields = array('category_urls', 'properties_to_check', 'cron_interval'); // Added cron_interval
         $missing_fields = array();
 
         foreach ($required_fields as $field) {
@@ -568,8 +569,8 @@ class Real_Estate_Scraper_Admin
         // }
 
         // Other options (some activated)
-        $options['cron_interval'] = 'hourly'; // Set to default, ignore POST
-        $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10; // Activated, no sanitization (intval is type cast)
+        $options['cron_interval'] = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly'; // Activated, no sanitization
+        $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $options['default_status'] = 'draft'; // Set to default, ignore POST
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
@@ -603,14 +604,14 @@ class Real_Estate_Scraper_Admin
 
         if ($options_match) {
             error_log('RES DEBUG - Settings updated successfully, updating cron schedule...');
-            // Update cron schedule (commented out conditional, will always attempt if $options_match is true)
-            // try {
-            //     $cron = Real_Estate_Scraper_Cron::get_instance();
-            //     $cron->update_cron_interval($options['cron_interval']);
-            //     error_log('RES DEBUG - Cron schedule updated');
-            // } catch (Exception $e) {
-            //     error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
-            // }
+            // Update cron schedule (now active)
+            try {
+                $cron = Real_Estate_Scraper_Cron::get_instance();
+                $cron->update_cron_interval($options['cron_interval']);
+                error_log('RES DEBUG - Cron schedule updated');
+            } catch (Exception $e) {
+                error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
+            }
 
             // No echo here, redirect happens in handle_save_settings
         } else {
