@@ -85,6 +85,8 @@ class Real_Estate_Scraper_Mapper
             'fave_property_bathrooms' => $this->clean_number($property_data['bathrooms']),
             'fave_property_address' => $this->clean_address($property_data['address']),
             'fave_property_map_address' => $this->clean_address($property_data['address']),
+            'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
+            'fave_property_map_longitude' => $this->clean_coordinate($property_data['longitude']),
             'fave_property_source_url' => $property_data['source_url']
         );
 
@@ -302,5 +304,20 @@ class Real_Estate_Scraper_Mapper
         $address = sanitize_text_field($address);
 
         return $address;
+    }
+
+    /**
+     * Clean coordinate (latitude or longitude)
+     */
+    private function clean_coordinate($coordinate)
+    {
+        $coordinate = trim($coordinate);
+        // Allow digits, decimal point, and negative sign
+        $coordinate = preg_replace('/[^\d.-]/', '', $coordinate);
+        // Ensure it looks like a valid coordinate, e.g., no multiple decimal points or invalid chars
+        if (is_numeric($coordinate)) {
+            return (string) floatval($coordinate);
+        }
+        return '';
     }
 }

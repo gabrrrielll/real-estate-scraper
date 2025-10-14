@@ -348,6 +348,8 @@ class Real_Estate_Scraper_Scraper
             'bedrooms' => '',
             'bathrooms' => '',
             'address' => '',
+            'latitude' => '', // Added for latitude
+            'longitude' => '', // Added for longitude
             'images' => array(),
             'source_url' => $source_url
         );
@@ -411,6 +413,18 @@ class Real_Estate_Scraper_Scraper
                 $property_data['address'] = $text;
                 break;
             }
+        }
+
+        // Extract latitude
+        $latitude_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['latitude_xpath']);
+        if ($latitude_nodes->length > 0) {
+            $property_data['latitude'] = trim($latitude_nodes->item(0)->textContent);
+        }
+
+        // Extract longitude
+        $longitude_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['longitude_xpath']);
+        if ($longitude_nodes->length > 0) {
+            $property_data['longitude'] = trim($longitude_nodes->item(0)->textContent);
         }
 
         // Extract images
