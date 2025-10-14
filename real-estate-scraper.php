@@ -42,6 +42,7 @@ require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-scraper.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-mapper.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-cron.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-admin.php';
+require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/constants.php'; // NEW: Include constants file
 
 /**
  * Main plugin class

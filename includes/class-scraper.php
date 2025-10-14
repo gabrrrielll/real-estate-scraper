@@ -194,14 +194,15 @@ class Real_Estate_Scraper_Scraper
         $xpath = new DOMXPath($dom);
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
-        $links = $xpath->query('//a[contains(@href, "/property/") or contains(@href, "/listing/") or contains(@href, "/anunt/")]');
+        // Use XPath from constants file
+        $links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
 
         foreach ($links as $link) {
             $href = $link->getAttribute('href');
 
             // Convert relative URLs to absolute
             if (strpos($href, 'http') !== 0) {
-                $href = 'https://example.com' . $href;
+                $href = RES_SCRAPER_CONFIG['base_url_for_relative_links'] . $href; // Use base_url from constants
             }
 
             if (!in_array($href, $property_urls)) {
@@ -339,13 +340,13 @@ class Real_Estate_Scraper_Scraper
         $xpath = new DOMXPath($dom);
 
         // Extract title
-        $title_nodes = $xpath->query('//h1 | //title');
+        $title_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['title_xpath']);
         if ($title_nodes->length > 0) {
             $property_data['title'] = trim($title_nodes->item(0)->textContent);
         }
 
         // Extract price
-        $price_nodes = $xpath->query('//*[contains(@class, "price") or contains(text(), "€") or contains(text(), "EUR")]');
+        $price_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['price_xpath']);
         foreach ($price_nodes as $node) {
             $text = trim($node->textContent);
             if (preg_match('/[\d.,]+\s*[€EUR]/', $text)) {
@@ -355,7 +356,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract size
-        $size_nodes = $xpath->query('//*[contains(text(), "mp") or contains(text(), "m²") or contains(text(), "sq")]');
+        $size_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['size_xpath']);
         foreach ($size_nodes as $node) {
             $text = trim($node->textContent);
             if (preg_match('/[\d.,]+\s*(mp|m²|sq)/i', $text)) {
@@ -365,7 +366,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract bedrooms
-        $bedroom_nodes = $xpath->query('//*[contains(text(), "dormitor") or contains(text(), "cameră") or contains(text(), "room")]');
+        $bedroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bedrooms_xpath']);
         foreach ($bedroom_nodes as $node) {
             $text = trim($node->textContent);
             if (preg_match('/(\d+)\s*(dormitor|cameră|room)/i', $text, $matches)) {
@@ -375,7 +376,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract bathrooms
-        $bathroom_nodes = $xpath->query('//*[contains(text(), "baie") or contains(text(), "bathroom")]');
+        $bathroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bathrooms_xpath']);
         foreach ($bathroom_nodes as $node) {
             $text = trim($node->textContent);
             if (preg_match('/(\d+)\s*(baie|bathroom)/i', $text, $matches)) {
@@ -385,7 +386,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract address
-        $address_nodes = $xpath->query('//*[contains(@class, "address") or contains(@class, "location")]');
+        $address_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['address_xpath']);
         foreach ($address_nodes as $node) {
             $text = trim($node->textContent);
             if (strlen($text) > 10 && strlen($text) < 200) {
@@ -395,13 +396,13 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract images
-        $image_nodes = $xpath->query('//img[@src]');
+        $image_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['images_xpath']);
         foreach ($image_nodes as $node) {
             $src = $node->getAttribute('src');
 
             // Convert relative URLs to absolute
             if (strpos($src, 'http') !== 0) {
-                $src = 'https://example.com' . $src;
+                $src = RES_SCRAPER_CONFIG['base_url_for_relative_links'] . $src; // Use base_url from constants
             }
 
             // Filter out small images and icons
@@ -411,7 +412,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract content/description
-        $content_nodes = $xpath->query('//*[contains(@class, "description") or contains(@class, "content") or contains(@class, "details")]');
+        $content_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['content_xpath']);
         foreach ($content_nodes as $node) {
             $text = trim($node->textContent);
             if (strlen($text) > 50) {
