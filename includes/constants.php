@@ -25,7 +25,7 @@ if (!defined('ABSPATH')) {
 define('RES_SCRAPER_CONFIG', array(
     'property_list_urls_xpath' => '//a[contains(@class, "card-box") and contains(@class, "card-1")]',
     'property_data' => array(
-        'title_xpath' => '//h1[@data-test-id="ad-title"]',
+        'title_xpath' => '//h1[@data-test-id="ad-title"]/span[1]',
         'content_xpath' => '//pre[@data-test-id="ad-description"]',
         'price_xpath' => '//div[@data-test-id="ad-price"]',
         'size_xpath' => '//div[@class="box-attr second"]/p[@data-test-id="ad-attribute"]/span[2]',
