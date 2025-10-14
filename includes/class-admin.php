@@ -220,7 +220,7 @@ class Real_Estate_Scraper_Admin
                                 </tr>
                                 <?php
                                 // /*
-                                ?>
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Garsoniere', 'real-estate-scraper'); ?></th>
                                     <td>
@@ -246,8 +246,8 @@ class Real_Estate_Scraper_Admin
                                     </td>
                                 </tr>
                                 <?php
-                                // */
-                                ?>
+        // */
+        ?>
                             </table>
                         </div>
                         
@@ -360,6 +360,9 @@ class Real_Estate_Scraper_Admin
                                         <p class="description"><?php _e('Number of properties to check per category.', 'real-estate-scraper'); ?></p>
                                     </td>
                                 </tr>
+                                <?php
+                                // */
+        ?>
                                 <tr>
                                     <th scope="row"><?php _e('Default Status', 'real-estate-scraper'); ?></th>
                                     <td>
@@ -457,21 +460,22 @@ class Real_Estate_Scraper_Admin
         $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
         $post_category_mapping = []; // Commented out
         $post_cron_interval = 'hourly'; // Commented out, set to default
-        $post_properties_to_check = 10; // Commented out, set to default
+        $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10; // Activated, no sanitization (intval is type cast)
         $post_default_status = 'draft'; // Commented out, set to default
 
         $db_category_urls = $options['category_urls'] ?? [];
         $db_category_mapping = []; // Commented out
         $db_cron_interval = 'hourly'; // Commented out, set to default
-        $db_properties_to_check = 10; // Commented out, set to default
+        $db_properties_to_check = $options['properties_to_check'] ?? 10; // Activated
         $db_default_status = 'draft'; // Commented out, set to default
 
         $save_successful = (
             (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente']) &&
             (isset($post_category_urls['garsoniere']) && isset($db_category_urls['garsoniere']) && $post_category_urls['garsoniere'] == $db_category_urls['garsoniere']) &&
             (isset($post_category_urls['case_vile']) && isset($db_category_urls['case_vile']) && $post_category_urls['case_vile'] == $db_category_urls['case_vile']) &&
-            (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']))
-        ;
+            (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']) &&
+            ($post_properties_to_check == $db_properties_to_check) // Added for Properties to Check
+        );
 
         // Old logic: $save_successful = (
         //     $post_category_urls == $db_category_urls &&
@@ -520,7 +524,7 @@ class Real_Estate_Scraper_Admin
         }
 
         // Check if required fields are present
-        $required_fields = array('category_urls'); // Only category_urls is required for now
+        $required_fields = array('category_urls', 'properties_to_check'); // Added properties_to_check
         $missing_fields = array();
 
         foreach ($required_fields as $field) {
@@ -563,9 +567,9 @@ class Real_Estate_Scraper_Admin
         //     error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
         // }
 
-        // Other options (commented out)
+        // Other options (some activated)
         $options['cron_interval'] = 'hourly'; // Set to default, ignore POST
-        $options['properties_to_check'] = 10; // Set to default, ignore POST
+        $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10; // Activated, no sanitization (intval is type cast)
         $options['default_status'] = 'draft'; // Set to default, ignore POST
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
