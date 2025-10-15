@@ -28,7 +28,7 @@ class Real_Estate_Scraper_Scraper
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
         $this->mapper = Real_Estate_Scraper_Mapper::get_instance();
         $this->options = get_option('real_estate_scraper_options', array());
-        $this->logger->debug('SCRAPER DEBUG - Scraper constructor options: ' . print_r($this->options, true));
+        $this->logger->debug('SCRAPER DEBUG - Scraper constructor options: ' . var_export($this->options, true));
     }
 
     /**
@@ -37,7 +37,7 @@ class Real_Estate_Scraper_Scraper
     public function run_scraper()
     {
         $start_time = microtime(true);
-        $this->logger->debug('SCRAPER DEBUG - Running scraper. Current options: ' . print_r($this->options, true));
+        $this->logger->debug('SCRAPER DEBUG - Running scraper. Current options: ' . var_export($this->options, true));
 
         try {
             $this->logger->log_scraper_start($this->options['category_urls']);
@@ -66,7 +66,7 @@ class Real_Estate_Scraper_Scraper
             //     }
             // } else {
             // --- ORIGINAL LOGIC: Process each category ---
-            $this->logger->debug('SCRAPER DEBUG - Category URLs before loop: ' . print_r($this->options['category_urls'], true));
+            $this->logger->debug('SCRAPER DEBUG - Category URLs before loop: ' . var_export($this->options['category_urls'], true));
             foreach ($this->options['category_urls'] as $category_key => $url) {
                 if (empty($url)) {
                     continue;
