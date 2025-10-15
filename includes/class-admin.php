@@ -361,6 +361,15 @@ class Real_Estate_Scraper_Admin
                                         <p class="description"><?php _e('Number of properties to check per category.', 'real-estate-scraper'); ?></p>
                                     </td>
                                 </tr>
+                                <tr>
+                                    <th scope="row"><?php _e('Max Ads per Session', 'real-estate-scraper'); ?></th>
+                                    <td>
+                                        <input type="number" name="max_ads_per_session" 
+                                               value="<?php echo esc_attr($options['max_ads_per_session'] ?? 4); ?>" 
+                                               min="1" max="50" />
+                                        <p class="description"><?php _e('Maximum number of ads to publish per scraping session (across all categories).', 'real-estate-scraper'); ?></p>
+                                    </td>
+                                </tr>
                                 <?php
                                 // */
         ?>
@@ -573,6 +582,7 @@ class Real_Estate_Scraper_Admin
         // Other options (all activated for testing)
         $options['cron_interval'] = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly';
         $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
+        $options['max_ads_per_session'] = isset($_POST['max_ads_per_session']) ? intval($_POST['max_ads_per_session']) : 4;
         $options['default_status'] = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;

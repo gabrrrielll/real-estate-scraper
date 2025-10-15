@@ -131,6 +131,7 @@ class Real_Estate_Scraper
             ),
             'cron_interval' => 'hourly',
             'properties_to_check' => 10,
+            'max_ads_per_session' => 4,
             'default_status' => 'draft',
             'retry_attempts' => 2,
             'retry_interval' => 30

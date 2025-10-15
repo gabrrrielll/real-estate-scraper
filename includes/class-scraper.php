@@ -61,7 +61,7 @@ class Real_Estate_Scraper_Scraper
             );
 
             // Global limit for total ads processed across all categories
-            $max_ads_global = RES_SCRAPER_CONFIG['max_ads_per_session'];
+            $max_ads_global = $this->options['max_ads_per_session'] ?? 4;
             $ads_processed_global = 0;
 
             // --- TEMPORARY TEST: Process single property directly ---
