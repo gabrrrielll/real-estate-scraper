@@ -72,6 +72,13 @@ class Real_Estate_Scraper_Scraper
                     continue;
                 }
 
+                // // Limit the number of properties to process per session (temporarily commented out for debugging)
+                // $max_ads = RES_SCRAPER_CONFIG['max_ads_per_session'];
+                // if ($max_ads > 0 && count($property_urls) > $max_ads) {
+                //     $this->logger->info("Limiting processing to {$max_ads} properties out of " . count($property_urls) . " found for category {$category_key}");
+                //     $property_urls = array_slice($property_urls, 0, $max_ads);
+                // }
+
                 $category_stats = $this->process_category($category_key, $url);
 
                 $stats['total_found'] += $category_stats['found'];
