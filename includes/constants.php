@@ -23,7 +23,7 @@ if (!defined('ABSPATH')) {
 
 // Define the scraper configuration
 define('RES_SCRAPER_CONFIG', array(
-    'property_list_urls_xpath' => '//div[@class="offers"]/a[@href]',
+    'property_list_urls_xpath' => '//div[contains(@class, "filter-results-sorting")]//a[contains(@class, "card-1") and @href]',
     'property_data' => array(
         'title_xpath' => '//h1[@data-test-id="ad-title"]/span[1]',
         'content_xpath' => '//pre[@data-test-id="ad-description"]',
@@ -39,5 +39,6 @@ define('RES_SCRAPER_CONFIG', array(
     ),
     'single_property_test_url' => 'https://homezz.ro/apartament-cu-incalzire-in-pardoseala-si-loc-de-parcare-in-b-3789471.html', // NEW: URL for testing single property parsing
     'base_url_for_relative_links' => 'https://homezz.ro', // Used for converting relative URLs to absolute. Update this if target site has relative links.
-    'retry_interval' => 60 // Added: Default retry interval in seconds for category page fetching
+    'retry_interval' => 60, // Added: Default retry interval in seconds for category page fetching
+    'max_ads_per_session' => 2 // NEW: Maximum number of ads to publish per scraping session
 ));

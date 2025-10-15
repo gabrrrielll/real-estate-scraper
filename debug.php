@@ -103,3 +103,4 @@ if (defined('REAL_ESTATE_SCRAPER_PLUGIN_URL')) {
     echo "<p><strong>JS Accessible:</strong> " . (file_get_contents($js_url) !== false ? 'YES' : 'NO') . "</p>";
 }
 
+

@@ -133,10 +133,23 @@ class Real_Estate_Scraper_Mapper
 
         foreach ($images as $image_url) {
             try {
-                $image_id = $this->download_and_attach_image($image_url, $post_id);
+                // Check if image already exists in media library by URL
+                $existing_attachment_id = $this->get_attachment_id_by_url($image_url);
+
+                if ($existing_attachment_id) {
+                    $image_id = $existing_attachment_id;
+                    $this->logger->debug("Image already exists, using existing attachment ID: {$image_id} for URL: {$image_url}");
+                } else {
+                    $image_id = $this->download_and_attach_image($image_url, $post_id);
+                    if ($image_id) {
+                        // Store original image URL as post meta for future duplicate checks
+                        update_post_meta($image_id, '_real_estate_scraper_original_image_url', $image_url);
+                        $this->logger->debug("Downloaded and attached new image: {$image_url}, attachment ID: {$image_id}");
+                    }
+                }
+
                 if ($image_id) {
                     $uploaded_images[] = $image_id;
-                    $this->logger->debug("Downloaded and attached image: {$image_url}");
                 }
             } catch (Exception $e) {
                 $this->logger->warning("Failed to download image {$image_url}: " . $e->getMessage());
@@ -216,6 +229,33 @@ class Real_Estate_Scraper_Mapper
         wp_update_attachment_metadata($attach_id, $attach_data);
 
         return $attach_id;
+    }
+
+    /**
+     * Get attachment ID by original image URL
+     */
+    private function get_attachment_id_by_url($image_url)
+    {
+        $args = array(
+            'post_type' => 'attachment',
+            'meta_query' => array(
+                array(
+                    'key' => '_real_estate_scraper_original_image_url',
+                    'value' => $image_url,
+                    'compare' => '='
+                )
+            ),
+            'posts_per_page' => 1,
+            'fields' => 'ids',
+        );
+
+        $attachments = get_posts($args);
+
+        if (!empty($attachments)) {
+            return $attachments[0];
+        }
+
+        return false;
     }
 
     /**
