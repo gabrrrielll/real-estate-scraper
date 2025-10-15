@@ -373,20 +373,86 @@ class Real_Estate_Scraper_Mapper
      */
     private function get_geocoded_address_for_save($property_data)
     {
-        // If we have geocoded address, use it
+        // If we have geocoded address, format it properly
         if (isset($property_data['geocoded_address']) && !empty($property_data['geocoded_address'])) {
             $address = $property_data['geocoded_address'];
             
-            // Use display_name as the main address
-            if (!empty($address['display_name'])) {
-                error_log('RES DEBUG - Using geocoded address: ' . $address['display_name']);
-                return $this->clean_address($address['display_name']);
+            // Format address in the desired order: Street, Number, Sector, City, Postal Code, Country
+            $formatted_address = $this->format_address_components($address);
+            
+            if (!empty($formatted_address)) {
+                error_log('RES DEBUG - Using formatted geocoded address: ' . $formatted_address);
+                return $this->clean_address($formatted_address);
             }
         }
         
         // Fallback to original address
         error_log('RES DEBUG - Using original address: ' . $property_data['address']);
         return $this->clean_address($property_data['address']);
+    }
+
+    /**
+     * Format address components in the desired order
+     */
+    private function format_address_components($address)
+    {
+        $components = array();
+        
+        // Extract components
+        $street = trim($address['street'] ?? '');
+        $house_number = trim($address['house_number'] ?? '');
+        $city = trim($address['city'] ?? '');
+        $postal_code = trim($address['postal_code'] ?? '');
+        $country = trim($address['country'] ?? '');
+        $county = trim($address['county'] ?? '');
+        
+        // Extract sector from display_name if available (for Bucharest)
+        $sector = '';
+        if (!empty($address['display_name'])) {
+            if (preg_match('/Sector (\d+)/', $address['display_name'], $matches)) {
+                $sector = 'Sector ' . $matches[1];
+            }
+        }
+        
+        // Build address in desired order: Street, Number, Sector, City, Postal Code, Country
+        
+        // 1. Street
+        if (!empty($street)) {
+            $components[] = $street;
+        }
+        
+        // 2. House number
+        if (!empty($house_number)) {
+            $components[] = $house_number;
+        }
+        
+        // 3. Sector
+        if (!empty($sector)) {
+            $components[] = $sector;
+        }
+        
+        // 4. City
+        if (!empty($city)) {
+            $components[] = $city;
+        }
+        
+        // 5. Postal code
+        if (!empty($postal_code)) {
+            $components[] = $postal_code;
+        }
+        
+        // 6. Country
+        if (!empty($country)) {
+            $components[] = $country;
+        }
+        
+        // Join components with comma and space
+        $formatted = implode(', ', $components);
+        
+        error_log('RES DEBUG - Address components: Street=' . $street . ', Number=' . $house_number . ', Sector=' . $sector . ', City=' . $city . ', Postal=' . $postal_code . ', Country=' . $country);
+        error_log('RES DEBUG - Formatted address: ' . $formatted);
+        
+        return $formatted;
     }
 
     /**
