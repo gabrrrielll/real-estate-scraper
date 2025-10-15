@@ -87,7 +87,7 @@ class Real_Estate_Scraper_Mapper
             'fave_property_bedrooms' => $this->clean_number($property_data['bedrooms']),
             'fave_property_bathrooms' => $this->clean_number($property_data['bathrooms']),
             'fave_property_address' => $this->get_geocoded_address_for_save($property_data),
-            'fave_property_map_address' => $this->clean_address($property_data['address']),
+            'fave_property_map_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
             'fave_property_map_longitude' => $this->clean_coordinate($property_data['longitude']),
             'fave_property_source_url' => $property_data['source_url']
@@ -376,16 +376,16 @@ class Real_Estate_Scraper_Mapper
         // If we have geocoded address, format it properly
         if (isset($property_data['geocoded_address']) && !empty($property_data['geocoded_address'])) {
             $address = $property_data['geocoded_address'];
-            
+
             // Format address in the desired order: Street, Number, Sector, City, Postal Code, Country
             $formatted_address = $this->format_address_components($address);
-            
+
             if (!empty($formatted_address)) {
                 error_log('RES DEBUG - Using formatted geocoded address: ' . $formatted_address);
                 return $this->clean_address($formatted_address);
             }
         }
-        
+
         // Fallback to original address
         error_log('RES DEBUG - Using original address: ' . $property_data['address']);
         return $this->clean_address($property_data['address']);
@@ -397,7 +397,7 @@ class Real_Estate_Scraper_Mapper
     private function format_address_components($address)
     {
         $components = array();
-        
+
         // Extract components
         $street = trim($address['street'] ?? '');
         $house_number = trim($address['house_number'] ?? '');
@@ -405,7 +405,7 @@ class Real_Estate_Scraper_Mapper
         $postal_code = trim($address['postal_code'] ?? '');
         $country = trim($address['country'] ?? '');
         $county = trim($address['county'] ?? '');
-        
+
         // Extract sector from display_name if available (for Bucharest)
         $sector = '';
         if (!empty($address['display_name'])) {
@@ -413,45 +413,45 @@ class Real_Estate_Scraper_Mapper
                 $sector = 'Sector ' . $matches[1];
             }
         }
-        
+
         // Build address in desired order: Street, Number, Sector, City, Postal Code, Country
-        
+
         // 1. Street
         if (!empty($street)) {
             $components[] = $street;
         }
-        
+
         // 2. House number
         if (!empty($house_number)) {
             $components[] = $house_number;
         }
-        
+
         // 3. Sector
         if (!empty($sector)) {
             $components[] = $sector;
         }
-        
+
         // 4. City
         if (!empty($city)) {
             $components[] = $city;
         }
-        
+
         // 5. Postal code
         if (!empty($postal_code)) {
             $components[] = $postal_code;
         }
-        
+
         // 6. Country
         if (!empty($country)) {
             $components[] = $country;
         }
-        
+
         // Join components with comma and space
         $formatted = implode(', ', $components);
-        
+
         error_log('RES DEBUG - Address components: Street=' . $street . ', Number=' . $house_number . ', Sector=' . $sector . ', City=' . $city . ', Postal=' . $postal_code . ', Country=' . $country);
         error_log('RES DEBUG - Formatted address: ' . $formatted);
-        
+
         return $formatted;
     }
 
