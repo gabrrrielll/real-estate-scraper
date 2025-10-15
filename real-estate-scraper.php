@@ -222,8 +222,17 @@ class Real_Estate_Scraper
         $logger = Real_Estate_Scraper_Logger::get_instance();
         $logs = $logger->get_today_logs();
         error_log('RES DEBUG - AJAX get_logs returning ' . count($logs) . ' log entries');
-
-        wp_send_json($logs);
+        
+        // Ensure we return a proper array
+        if (!is_array($logs)) {
+            error_log('RES DEBUG - Logs is not an array, converting...');
+            $logs = array();
+        }
+        
+        // Add explicit headers and return JSON
+        header('Content-Type: application/json');
+        echo json_encode($logs);
+        wp_die();
     }
 
     public function ajax_clean_logs()
