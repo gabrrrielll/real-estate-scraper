@@ -44,10 +44,14 @@ class Real_Estate_Scraper_Scraper
         error_log('RES DEBUG - run_scraper() method called at: ' . current_time('mysql'));
         $start_time = microtime(true);
         error_log('RES DEBUG - run_scraper() options: ' . var_export($this->options, true));
-        $this->logger->debug('SCRAPER DEBUG - Running scraper. Current options: ' . var_export($this->options, true));
+        error_log('SCRAPER DEBUG - Running scraper. Current options: ' . var_export($this->options, true));
 
         try {
-            $this->logger->log_scraper_start($this->options['category_urls']);
+            error_log('RES DEBUG - About to log scraper start');
+            error_log('=== SCRAPER STARTED ===');
+            error_log('Categories to scrape: ' . implode(', ', array_keys($this->options['category_urls'])));
+            error_log('Properties to check per category: ' . $this->options['properties_to_check']);
+            error_log('RES DEBUG - Scraper start logged successfully');
 
             $stats = array(
                 'total_found' => 0,
@@ -73,8 +77,10 @@ class Real_Estate_Scraper_Scraper
             //     }
             // } else {
             // --- ORIGINAL LOGIC: Process each category ---
-            $this->logger->debug('SCRAPER DEBUG - Category URLs before loop: ' . var_export($this->options['category_urls'], true));
+            error_log('SCRAPER DEBUG - Category URLs before loop: ' . var_export($this->options['category_urls'], true));
+            error_log('RES DEBUG - Starting category loop...');
             foreach ($this->options['category_urls'] as $category_key => $url) {
+                error_log('RES DEBUG - Loop iteration - Category: ' . $category_key . ', URL: ' . $url);
                 if (empty($url)) {
                     continue;
                 }
