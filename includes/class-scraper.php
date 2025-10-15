@@ -484,25 +484,25 @@ class Real_Estate_Scraper_Scraper
             }
         }
 
-        // Extract bedrooms
-        $bedroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bedrooms_xpath']);
-        foreach ($bedroom_nodes as $node) {
-            $text = trim($node->textContent);
-            if (preg_match('/(\d+)\s*(dormitor|cameră|room)/i', $text, $matches)) {
-                $property_data['bedrooms'] = $matches[1];
-                break;
-            }
-        }
+        // Extract bedrooms (commented out - XPath not defined)
+        // $bedroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bedrooms_xpath']);
+        // foreach ($bedroom_nodes as $node) {
+        //     $text = trim($node->textContent);
+        //     if (preg_match('/(\d+)\s*(dormitor|cameră|room)/i', $text, $matches)) {
+        //         $property_data['bedrooms'] = $matches[1];
+        //         break;
+        //     }
+        // }
 
-        // Extract bathrooms
-        $bathroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bathrooms_xpath']);
-        foreach ($bathroom_nodes as $node) {
-            $text = trim($node->textContent);
-            if (preg_match('/(\d+)\s*(baie|bathroom)/i', $text, $matches)) {
-                $property_data['bathrooms'] = $matches[1];
-                break;
-            }
-        }
+        // Extract bathrooms (commented out - XPath not defined)
+        // $bathroom_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['bathrooms_xpath']);
+        // foreach ($bathroom_nodes as $node) {
+        //     $text = trim($node->textContent);
+        //     if (preg_match('/(\d+)\s*(baie|bathroom)/i', $text, $matches)) {
+        //         $property_data['bathrooms'] = $matches[1];
+        //         break;
+        //     }
+        // }
 
         // Extract address
         $address_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['address_xpath']);
@@ -564,10 +564,10 @@ class Real_Estate_Scraper_Scraper
     private function extract_specifications($xpath)
     {
         error_log('RES DEBUG - === EXTRACTING SPECIFICATIONS ===');
-        
+
         $spec_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['specifications_xpath']);
         error_log('RES DEBUG - Found ' . $spec_nodes->length . ' specification nodes');
-        
+
         if ($spec_nodes->length > 0) {
             foreach ($spec_nodes as $node) {
                 $spans = $xpath->query('.//span', $node);
@@ -580,7 +580,7 @@ class Real_Estate_Scraper_Scraper
         } else {
             error_log('RES DEBUG - No specifications found');
         }
-        
+
         error_log('RES DEBUG - === SPECIFICATIONS EXTRACTION COMPLETE ===');
     }
 }
