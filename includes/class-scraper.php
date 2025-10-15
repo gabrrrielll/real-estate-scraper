@@ -119,12 +119,12 @@ class Real_Estate_Scraper_Scraper
             // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
 
-            // Limit the number of properties to process per session
-            $max_ads = RES_SCRAPER_CONFIG['max_ads_per_session'];
-            if ($max_ads > 0 && count($property_urls) > $max_ads) {
-                $this->logger->info("Limiting processing to {$max_ads} properties out of " . count($property_urls) . " found for category {$category_key}");
-                $property_urls = array_slice($property_urls, 0, $max_ads);
-            }
+            // // Limit the number of properties to process per session (temporarily commented out for debugging)
+            // $max_ads = RES_SCRAPER_CONFIG['max_ads_per_session'];
+            // if ($max_ads > 0 && count($property_urls) > $max_ads) {
+            //     $this->logger->info("Limiting processing to {$max_ads} properties out of " . count($property_urls) . " found for category {$category_key}");
+            //     $property_urls = array_slice($property_urls, 0, $max_ads);
+            // }
 
             $stats['found'] = count($property_urls);
 
