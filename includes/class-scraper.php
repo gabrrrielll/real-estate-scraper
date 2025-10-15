@@ -102,8 +102,8 @@ class Real_Estate_Scraper_Scraper
                 $stats['duplicates_skipped'] += $category_stats['duplicates'];
                 $stats['errors'] += $category_stats['errors'];
 
-                // Update global counter
-                $ads_processed_global += $category_stats['new'];
+                // Update global counter with all processed properties (new + duplicates)
+                $ads_processed_global += $category_stats['found'];
             }
             // }
             // --- END TEMPORARY TEST ---
