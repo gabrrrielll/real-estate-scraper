@@ -23,7 +23,8 @@ if (!defined('ABSPATH')) {
 
 // Define the scraper configuration
 define('RES_SCRAPER_CONFIG', array(
-    'property_list_urls_xpath' => '//div[contains(@class, "offers")]//a[@href]',
+    // 'property_list_urls_xpath' => '//div[contains(@class, "offers")]//a[@href]', // This node can be used for premium ads
+    'property_list_urls_xpath' => '//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//div[contains(@class, "card-1")]//a[@href]',
     'property_data' => array(
         'title_xpath' => '//h1[@data-test-id="ad-title"]/span[1]',
         'content_xpath' => '//pre[@data-test-id="ad-description"]',

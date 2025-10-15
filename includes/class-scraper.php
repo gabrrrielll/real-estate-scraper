@@ -268,8 +268,8 @@ class Real_Estate_Scraper_Scraper
         }
 
         // TODO: TEMPORARY - Remove this return to enable actual scraping after debugging links
-        error_log('RES DEBUG - Stopping execution here for link debugging. Remove this return to continue.');
-        return array(); // Stop here for debugging - prevents actual property parsing
+        // error_log('RES DEBUG - Stopping execution here for link debugging. Remove this return to continue.');
+        // return array(); // Stop here for debugging - prevents actual property parsing
         // --- END TEMPORARY DEBUG ---
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
