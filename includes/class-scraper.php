@@ -257,24 +257,25 @@ class Real_Estate_Scraper_Scraper
         $xpath = new DOMXPath($dom);
 
         // --- TEMPORARY TEST: Log all h3 titles from class="grid-4 main-cards" ---
-        error_log('RES DEBUG - Looking for h3 titles in grid-4 main-cards...');
-        $h3_nodes = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//h3');
-        error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in grid-4 main-cards');
+        // error_log('RES DEBUG - Looking for h3 titles in grid-4 main-cards...');
+        // $h3_nodes = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//h3');
+        // error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in grid-4 main-cards');
         
-        if ($h3_nodes->length > 0) {
-            foreach ($h3_nodes as $index => $h3) {
-                error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
-            }
-        } else {
-            error_log('RES DEBUG - No h3 elements found in grid-4 main-cards');
-            // Try to find if grid-4 main-cards exists at all
-            $filter_div = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]');
-            error_log('RES DEBUG - grid-4 main-cards div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
-        }
+        // if ($h3_nodes->length > 0) {
+        //     foreach ($h3_nodes as $index => $h3) {
+        //         error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
+        //     }
+        // } else {
+        //     error_log('RES DEBUG - No h3 elements found in grid-4 main-cards');
+        //     // Try to find if grid-4 main-cards exists at all
+        //     $filter_div = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]');
+        //     error_log('RES DEBUG - grid-4 main-cards div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
+        // }
         
         // Also log how many links the XPath finds
+        error_log('RES DEBUG - Using XPath from constants: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
         $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
-        error_log('RES DEBUG - XPath found ' . $test_links->length . ' links using: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
+        error_log('RES DEBUG - XPath found ' . $test_links->length . ' links');
         // --- END TEMPORARY TEST ---
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
