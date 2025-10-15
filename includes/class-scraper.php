@@ -66,6 +66,7 @@ class Real_Estate_Scraper_Scraper
             //     }
             // } else {
             // --- ORIGINAL LOGIC: Process each category ---
+            $this->logger->debug('SCRAPER DEBUG - Category URLs before loop: ' . print_r($this->options['category_urls'], true));
             foreach ($this->options['category_urls'] as $category_key => $url) {
                 if (empty($url)) {
                     continue;
