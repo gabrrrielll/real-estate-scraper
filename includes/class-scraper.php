@@ -553,7 +553,7 @@ class Real_Estate_Scraper_Scraper
         }
 
         // Extract specifications
-        $this->extract_specifications($xpath);
+        $property_data['specifications'] = $this->extract_specifications($xpath);
 
         return $property_data;
     }
@@ -564,23 +564,28 @@ class Real_Estate_Scraper_Scraper
     private function extract_specifications($xpath)
     {
         error_log('RES DEBUG - === EXTRACTING SPECIFICATIONS ===');
-
+        
+        $specifications = array();
         $spec_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['specifications_xpath']);
         error_log('RES DEBUG - Found ' . $spec_nodes->length . ' specification nodes');
-
+        
         if ($spec_nodes->length > 0) {
             foreach ($spec_nodes as $node) {
                 $spans = $xpath->query('.//span', $node);
                 if ($spans->length >= 2) {
                     $attribute = trim($spans->item(0)->textContent);
                     $value = trim($spans->item(1)->textContent);
+                    
+                    // Add to specifications array
+                    $specifications[$attribute] = $value;
                     error_log('RES DEBUG - SPECIFICATION: "' . $attribute . '" = "' . $value . '"');
                 }
             }
         } else {
             error_log('RES DEBUG - No specifications found');
         }
-
-        error_log('RES DEBUG - === SPECIFICATIONS EXTRACTION COMPLETE ===');
+        
+        error_log('RES DEBUG - === SPECIFICATIONS EXTRACTION COMPLETE - Found ' . count($specifications) . ' specifications ===');
+        return $specifications;
     }
 }

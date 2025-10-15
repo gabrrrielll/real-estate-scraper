@@ -62,6 +62,9 @@ class Real_Estate_Scraper_Mapper
             // Set taxonomies
             $this->set_property_taxonomies($post_id, $category_key);
 
+            // Save dynamic specifications
+            $this->save_dynamic_specifications($post_id, $property_data['specifications'] ?? array());
+
             // Handle images
             $this->handle_property_images($post_id, $property_data['images']);
 
@@ -363,5 +366,45 @@ class Real_Estate_Scraper_Mapper
             return (string) floatval($coordinate);
         }
         return '';
+    }
+
+    /**
+     * Save dynamic specifications as Additional Features
+     */
+    private function save_dynamic_specifications($post_id, $specifications)
+    {
+        if (empty($specifications)) {
+            error_log('RES DEBUG - No specifications to save for post ' . $post_id);
+            return;
+        }
+
+        $additional_features = array();
+        $index = 0;
+
+        foreach ($specifications as $attribute => $value) {
+            // Skip empty values
+            if (empty(trim($value))) {
+                continue;
+            }
+
+            $additional_features[] = array(
+                'fave_additional_feature_title' => trim($attribute),
+                'fave_additional_feature_value' => trim($value)
+            );
+            $index++;
+        }
+
+        if (!empty($additional_features)) {
+            // Save as meta field (Houzez format)
+            update_post_meta($post_id, 'additional_features', $additional_features);
+            error_log('RES DEBUG - Saved ' . count($additional_features) . ' additional features for post ' . $post_id);
+            
+            // Log first few for debugging
+            foreach (array_slice($additional_features, 0, 3) as $feature) {
+                error_log('RES DEBUG - Feature: "' . $feature['fave_additional_feature_title'] . '" = "' . $feature['fave_additional_feature_value'] . '"');
+            }
+        } else {
+            error_log('RES DEBUG - No valid specifications to save for post ' . $post_id);
+        }
     }
 }
