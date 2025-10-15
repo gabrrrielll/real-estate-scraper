@@ -170,15 +170,20 @@ class Real_Estate_Scraper
 
     public function ajax_run_scraper()
     {
+        error_log('RES DEBUG - AJAX run_scraper called.');
         check_ajax_referer('res_nonce', 'nonce');
+        error_log('RES DEBUG - Nonce check passed for run_scraper.');
 
         if (!current_user_can('manage_options')) {
+            error_log('RES DEBUG - User does not have manage_options capability for run_scraper.');
             wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
         }
+        error_log('RES DEBUG - User permissions check passed for run_scraper.');
 
         // Run scraper
         $scraper = Real_Estate_Scraper_Scraper::get_instance();
         $result = $scraper->run_scraper();
+        error_log('RES DEBUG - Scraper run completed. Result: ' . print_r($result, true));
 
         wp_send_json($result);
     }
