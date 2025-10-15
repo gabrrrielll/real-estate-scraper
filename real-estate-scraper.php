@@ -44,6 +44,7 @@ require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-scraper.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-mapper.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-cron.php';
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-admin.php';
+require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/class-geocoder.php'; // NEW: Include geocoder class
 require_once REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'includes/constants.php'; // NEW: Include constants file
 
 /**
@@ -218,12 +219,12 @@ class Real_Estate_Scraper
 
         $logger = Real_Estate_Scraper_Logger::get_instance();
         $logs = $logger->get_today_logs();
-        
+
         // Ensure we return a proper array
         if (!is_array($logs)) {
             $logs = array();
         }
-        
+
         // Add explicit headers and return JSON
         header('Content-Type: application/json');
         echo json_encode($logs);
