@@ -188,7 +188,9 @@ class Real_Estate_Scraper
         error_log('RES DEBUG - Category URLs: ' . var_export($options['category_urls'] ?? 'NOT SET', true));
 
         // Run scraper
+        error_log('RES DEBUG - Creating scraper instance...');
         $scraper = Real_Estate_Scraper_Scraper::get_instance();
+        error_log('RES DEBUG - Scraper instance created, calling run_scraper()...');
         $result = $scraper->run_scraper();
         error_log('RES DEBUG - Scraper run completed. Result: ' . print_r($result, true));
 
