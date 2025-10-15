@@ -28,6 +28,7 @@ class Real_Estate_Scraper_Scraper
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
         $this->mapper = Real_Estate_Scraper_Mapper::get_instance();
         $this->options = get_option('real_estate_scraper_options', array());
+        $this->logger->debug('SCRAPER DEBUG - Scraper constructor options: ' . print_r($this->options, true));
     }
 
     /**
@@ -36,6 +37,7 @@ class Real_Estate_Scraper_Scraper
     public function run_scraper()
     {
         $start_time = microtime(true);
+        $this->logger->debug('SCRAPER DEBUG - Running scraper. Current options: ' . print_r($this->options, true));
 
         try {
             $this->logger->log_scraper_start($this->options['category_urls']);
