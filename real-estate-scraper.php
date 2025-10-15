@@ -182,6 +182,11 @@ class Real_Estate_Scraper
         }
         error_log('RES DEBUG - User permissions check passed for run_scraper.');
 
+        // Debug: Check options before creating scraper instance
+        $options = get_option('real_estate_scraper_options', array());
+        error_log('RES DEBUG - Options before scraper: ' . var_export($options, true));
+        error_log('RES DEBUG - Category URLs: ' . var_export($options['category_urls'] ?? 'NOT SET', true));
+
         // Run scraper
         $scraper = Real_Estate_Scraper_Scraper::get_instance();
         $result = $scraper->run_scraper();
