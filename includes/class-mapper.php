@@ -86,7 +86,7 @@ class Real_Estate_Scraper_Mapper
             'fave_property_size' => $this->clean_size($property_data['size']),
             'fave_property_bedrooms' => $this->clean_number($property_data['bedrooms']),
             'fave_property_bathrooms' => $this->clean_number($property_data['bathrooms']),
-            'fave_property_address' => $this->clean_address($property_data['address']),
+            'fave_property_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_address' => $this->clean_address($property_data['address']),
             'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
             'fave_property_map_longitude' => $this->clean_coordinate($property_data['longitude']),
@@ -369,6 +369,27 @@ class Real_Estate_Scraper_Mapper
     }
 
     /**
+     * Get geocoded address for saving to Houzez
+     */
+    private function get_geocoded_address_for_save($property_data)
+    {
+        // If we have geocoded address, use it
+        if (isset($property_data['geocoded_address']) && !empty($property_data['geocoded_address'])) {
+            $address = $property_data['geocoded_address'];
+            
+            // Use display_name as the main address
+            if (!empty($address['display_name'])) {
+                error_log('RES DEBUG - Using geocoded address: ' . $address['display_name']);
+                return $this->clean_address($address['display_name']);
+            }
+        }
+        
+        // Fallback to original address
+        error_log('RES DEBUG - Using original address: ' . $property_data['address']);
+        return $this->clean_address($property_data['address']);
+    }
+
+    /**
      * Save dynamic specifications as Additional Features
      */
     private function save_dynamic_specifications($post_id, $specifications)
@@ -398,7 +419,7 @@ class Real_Estate_Scraper_Mapper
             // Save as meta field (Houzez format)
             update_post_meta($post_id, 'additional_features', $additional_features);
             error_log('RES DEBUG - Saved ' . count($additional_features) . ' additional features for post ' . $post_id);
-            
+
             // Log first few for debugging
             foreach (array_slice($additional_features, 0, 3) as $feature) {
                 error_log('RES DEBUG - Feature: "' . $feature['fave_additional_feature_title'] . '" = "' . $feature['fave_additional_feature_value'] . '"');

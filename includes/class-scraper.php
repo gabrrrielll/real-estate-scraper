@@ -555,9 +555,9 @@ class Real_Estate_Scraper_Scraper
         // Extract specifications
         $property_data['specifications'] = $this->extract_specifications($xpath);
 
-        // Test geocoding if we have coordinates
+        // Get geocoded address if we have coordinates
         if (!empty($property_data['latitude']) && !empty($property_data['longitude'])) {
-            $this->test_geocoding($property_data['latitude'], $property_data['longitude']);
+            $property_data['geocoded_address'] = $this->get_geocoded_address($property_data['latitude'], $property_data['longitude']);
         }
 
         return $property_data;
@@ -595,11 +595,11 @@ class Real_Estate_Scraper_Scraper
     }
 
     /**
-     * Test geocoding with extracted coordinates
+     * Get geocoded address from coordinates
      */
-    private function test_geocoding($latitude, $longitude)
+    private function get_geocoded_address($latitude, $longitude)
     {
-        error_log('RES DEBUG - === TESTING GEOCODING ===');
+        error_log('RES DEBUG - === GETTING GEOCODED ADDRESS ===');
         error_log('RES DEBUG - Coordinates: lat=' . $latitude . ', lon=' . $longitude);
 
         $geocoder = Real_Estate_Scraper_Geocoder::get_instance();
@@ -614,10 +614,12 @@ class Real_Estate_Scraper_Scraper
             error_log('RES DEBUG - Postal Code: ' . $address['postal_code']);
             error_log('RES DEBUG - Country: ' . $address['country']);
             error_log('RES DEBUG - County: ' . $address['county']);
+            error_log('RES DEBUG - === GEOCODING COMPLETE ===');
+            return $address;
         } else {
             error_log('RES DEBUG - Geocoding failed!');
+            error_log('RES DEBUG - === GEOCODING COMPLETE ===');
+            return null;
         }
-
-        error_log('RES DEBUG - === GEOCODING TEST COMPLETE ===');
     }
 }
