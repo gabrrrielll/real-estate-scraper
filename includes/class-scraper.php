@@ -209,7 +209,7 @@ class Real_Estate_Scraper_Scraper
                 error_log('RES DEBUG - wp_remote_get successful, response code: ' . wp_remote_retrieve_response_code($response));
                 $body = wp_remote_retrieve_body($response);
                 error_log('RES DEBUG - Response body length: ' . strlen($body) . ' bytes');
-                
+
                 if (empty($body)) {
                     error_log('RES DEBUG - Response body is empty!');
                     throw new Exception('Empty response body');
@@ -256,12 +256,20 @@ class Real_Estate_Scraper_Scraper
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
 
-        // --- TEMPORARY TEST: Log content from class="selected-ads" ---
-        $selected_ads_nodes = $xpath->query('//div[@class="selected-ads"]');
-        if ($selected_ads_nodes->length > 0) {
-            $this->logger->info("Found class=\"selected-ads\" content (temporary test): " . $selected_ads_nodes->item(0)->textContent);
+        // --- TEMPORARY TEST: Log all h3 titles from class="filter-results-sorting" ---
+        error_log('RES DEBUG - Looking for h3 titles in filter-results-sorting...');
+        $h3_nodes = $xpath->query('//div[contains(@class, "filter-results-sorting")]//h3');
+        error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in filter-results-sorting');
+        
+        if ($h3_nodes->length > 0) {
+            foreach ($h3_nodes as $index => $h3) {
+                error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
+            }
         } else {
-            $this->logger->info("class=\"selected-ads\" not found in HTML (temporary test).");
+            error_log('RES DEBUG - No h3 elements found in filter-results-sorting');
+            // Try to find if filter-results-sorting exists at all
+            $filter_div = $xpath->query('//div[contains(@class, "filter-results-sorting")]');
+            error_log('RES DEBUG - filter-results-sorting div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
         }
         // --- END TEMPORARY TEST ---
 
