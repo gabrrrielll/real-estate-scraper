@@ -260,7 +260,7 @@ class Real_Estate_Scraper_Scraper
         // error_log('RES DEBUG - Looking for h3 titles in grid-4 main-cards...');
         // $h3_nodes = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//h3');
         // error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in grid-4 main-cards');
-        
+
         // if ($h3_nodes->length > 0) {
         //     foreach ($h3_nodes as $index => $h3) {
         //         error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
@@ -271,7 +271,7 @@ class Real_Estate_Scraper_Scraper
         //     $filter_div = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]');
         //     error_log('RES DEBUG - grid-4 main-cards div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
         // }
-        
+
         // Also log how many links the XPath finds
         error_log('RES DEBUG - Using XPath from constants: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
         $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
