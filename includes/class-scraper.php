@@ -60,6 +60,10 @@ class Real_Estate_Scraper_Scraper
                 'errors' => 0
             );
 
+            // Global limit for total ads processed across all categories
+            $max_ads_global = RES_SCRAPER_CONFIG['max_ads_per_session'];
+            $ads_processed_global = 0;
+
             // --- TEMPORARY TEST: Process single property directly ---
             // $test_url = RES_SCRAPER_CONFIG['single_property_test_url'];
             // if (!empty($test_url)) {
@@ -85,12 +89,21 @@ class Real_Estate_Scraper_Scraper
                     continue;
                 }
 
-                $category_stats = $this->process_category($category_key, $url);
+                // Check global limit before processing category
+                if ($max_ads_global > 0 && $ads_processed_global >= $max_ads_global) {
+                    error_log("RES DEBUG - Global limit reached ({$max_ads_global} ads processed). Skipping remaining categories.");
+                    break;
+                }
+
+                $category_stats = $this->process_category($category_key, $url, $max_ads_global, $ads_processed_global);
 
                 $stats['total_found'] += $category_stats['found'];
                 $stats['new_added'] += $category_stats['new'];
                 $stats['duplicates_skipped'] += $category_stats['duplicates'];
                 $stats['errors'] += $category_stats['errors'];
+                
+                // Update global counter
+                $ads_processed_global += $category_stats['new'];
             }
             // }
             // --- END TEMPORARY TEST ---
@@ -120,7 +133,7 @@ class Real_Estate_Scraper_Scraper
     /**
      * Process a single category
      */
-    private function process_category($category_key, $url)
+    private function process_category($category_key, $url, $max_ads_global = 0, $ads_processed_global = 0)
     {
         error_log("RES DEBUG - process_category() called for: {$category_key}, URL: {$url}");
         error_log("--- Processing category: {$category_key} ---");
@@ -139,11 +152,16 @@ class Real_Estate_Scraper_Scraper
             $property_urls = $this->get_property_urls_from_category($url);
             error_log('RES DEBUG - get_property_urls_from_category returned: ' . count($property_urls) . ' URLs');
 
-            // Limit the number of properties to process per session
-            $max_ads = RES_SCRAPER_CONFIG['max_ads_per_session'];
-            if ($max_ads > 0 && count($property_urls) > $max_ads) {
-                error_log("RES DEBUG - Limiting processing to {$max_ads} properties out of " . count($property_urls) . " found for category {$category_key}");
-                $property_urls = array_slice($property_urls, 0, $max_ads);
+            // Limit the number of properties to process based on global limit
+            $remaining_ads = $max_ads_global - $ads_processed_global;
+            if ($max_ads_global > 0 && $remaining_ads > 0) {
+                if (count($property_urls) > $remaining_ads) {
+                    error_log("RES DEBUG - Limiting processing to {$remaining_ads} properties out of " . count($property_urls) . " found for category {$category_key} (global limit: {$max_ads_global}, already processed: {$ads_processed_global})");
+                    $property_urls = array_slice($property_urls, 0, $remaining_ads);
+                }
+            } elseif ($max_ads_global > 0 && $remaining_ads <= 0) {
+                error_log("RES DEBUG - Global limit reached, skipping category {$category_key}");
+                $property_urls = array();
             }
 
             $stats['found'] = count($property_urls);
