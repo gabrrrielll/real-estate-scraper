@@ -59,11 +59,14 @@ class Real_Estate_Scraper_Mapper
             // Set meta fields
             $this->set_property_meta($post_id, $property_data);
 
-            // Set taxonomies
-            $this->set_property_taxonomies($post_id, $category_key);
+        // Set taxonomies
+        $this->set_property_taxonomies($post_id, $category_key);
 
-            // Save dynamic specifications
-            $this->save_dynamic_specifications($post_id, $property_data['specifications'] ?? array());
+        // Set location taxonomies from geocoded address
+        $this->set_location_taxonomies($post_id, $property_data);
+
+        // Save dynamic specifications
+        $this->save_dynamic_specifications($post_id, $property_data['specifications'] ?? array());
 
             // Handle images
             $this->handle_property_images($post_id, $property_data['images']);
@@ -493,5 +496,91 @@ class Real_Estate_Scraper_Mapper
         } else {
             error_log('RES DEBUG - No valid specifications to save for post ' . $post_id);
         }
+    }
+
+    /**
+     * Set location taxonomies from geocoded address
+     */
+    private function set_location_taxonomies($post_id, $property_data)
+    {
+        if (!isset($property_data['geocoded_address']) || empty($property_data['geocoded_address'])) {
+            error_log('RES DEBUG - No geocoded address data for location taxonomies');
+            return;
+        }
+
+        $address = $property_data['geocoded_address'];
+        error_log('RES DEBUG - Setting location taxonomies for post ' . $post_id);
+
+        // Set Country taxonomy
+        if (!empty($address['country'])) {
+            $country_name = $this->clean_taxonomy_name($address['country']);
+            $country_term = $this->get_or_create_term($country_name, 'property_country');
+            if ($country_term) {
+                wp_set_object_terms($post_id, array($country_term->term_id), 'property_country');
+                error_log('RES DEBUG - Set country: ' . $country_name . ' (ID: ' . $country_term->term_id . ')');
+            }
+        }
+
+        // Set State/County taxonomy
+        if (!empty($address['county'])) {
+            $state_name = $this->clean_taxonomy_name($address['county']);
+            $state_term = $this->get_or_create_term($state_name, 'property_state');
+            if ($state_term) {
+                wp_set_object_terms($post_id, array($state_term->term_id), 'property_state');
+                error_log('RES DEBUG - Set state: ' . $state_name . ' (ID: ' . $state_term->term_id . ')');
+            }
+        }
+
+        // Set City taxonomy
+        if (!empty($address['city'])) {
+            $city_name = $this->clean_taxonomy_name($address['city']);
+            $city_term = $this->get_or_create_term($city_name, 'property_city');
+            if ($city_term) {
+                wp_set_object_terms($post_id, array($city_term->term_id), 'property_city');
+                error_log('RES DEBUG - Set city: ' . $city_name . ' (ID: ' . $city_term->term_id . ')');
+            }
+        }
+    }
+
+    /**
+     * Clean taxonomy name for WordPress
+     */
+    private function clean_taxonomy_name($name)
+    {
+        $name = trim($name);
+        $name = sanitize_text_field($name);
+        return $name;
+    }
+
+    /**
+     * Get existing term or create new one
+     */
+    private function get_or_create_term($name, $taxonomy)
+    {
+        if (empty($name)) {
+            return null;
+        }
+
+        // Try to get existing term
+        $term = get_term_by('name', $name, $taxonomy);
+        
+        if ($term) {
+            return $term;
+        }
+
+        // Create new term if it doesn't exist
+        $term_data = wp_insert_term($name, $taxonomy);
+        
+        if (is_wp_error($term_data)) {
+            error_log('RES DEBUG - Error creating term "' . $name . '" in taxonomy "' . $taxonomy . '": ' . $term_data->get_error_message());
+            return null;
+        }
+
+        $term_id = $term_data['term_id'];
+        $term = get_term($term_id, $taxonomy);
+        
+        error_log('RES DEBUG - Created new term: "' . $name . '" in taxonomy "' . $taxonomy . '" (ID: ' . $term_id . ')');
+        
+        return $term;
     }
 }
