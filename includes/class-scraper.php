@@ -564,6 +564,29 @@ class Real_Estate_Scraper_Scraper
     private function extract_specifications($xpath)
     {
         error_log('RES DEBUG - === EXTRACTING SPECIFICATIONS ===');
+        error_log('RES DEBUG - Using XPath: ' . RES_SCRAPER_CONFIG['property_data']['specifications_xpath']);
+        
+        // Test different XPath approaches
+        $test_xpaths = array(
+            'Original' => RES_SCRAPER_CONFIG['property_data']['specifications_xpath'],
+            'Alternative 1' => '//p[@data-test-id="ad-attribute"]',
+            'Alternative 2' => '//div[contains(@class, "box-attr")]//p[@data-test-id="ad-attribute"]',
+            'Alternative 3' => '//div[@id="specifications-section"]//p[@data-test-id="ad-attribute"]',
+            'Alternative 4' => '//div[contains(@class, "details-attr")]//p[@data-test-id="ad-attribute"]',
+            'Alternative 5' => '//p[contains(@data-test-id, "ad-attribute")]',
+            'Alternative 6' => '//span[contains(text(), "Număr camere")]',
+            'Alternative 7' => '//span[contains(text(), "Suprafața utilă")]'
+        );
+        
+        foreach ($test_xpaths as $name => $xpath_query) {
+            $nodes = $xpath->query($xpath_query);
+            error_log('RES DEBUG - ' . $name . ' XPath found: ' . $nodes->length . ' nodes');
+            
+            if ($nodes->length > 0) {
+                error_log('RES DEBUG - First node content: ' . trim($nodes->item(0)->textContent));
+                break;
+            }
+        }
         
         $spec_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['specifications_xpath']);
         error_log('RES DEBUG - Found ' . $spec_nodes->length . ' specification nodes');
