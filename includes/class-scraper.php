@@ -129,7 +129,9 @@ class Real_Estate_Scraper_Scraper
      */
     private function process_category($category_key, $url)
     {
-        $this->logger->log_category_start($category_key, $url);
+        error_log("RES DEBUG - process_category() called for: {$category_key}, URL: {$url}");
+        error_log("--- Processing category: {$category_key} ---");
+        error_log("URL: {$url}");
 
         $stats = array(
             'found' => 0,
@@ -139,8 +141,10 @@ class Real_Estate_Scraper_Scraper
         );
 
         try {
+            error_log('RES DEBUG - About to get property URLs from category page');
             // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
+            error_log('RES DEBUG - get_property_urls_from_category returned: ' . count($property_urls) . ' URLs');
 
             // // Limit the number of properties to process per session (temporarily commented out for debugging)
             // $max_ads = RES_SCRAPER_CONFIG['max_ads_per_session'];
@@ -183,12 +187,14 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_property_urls_from_category($category_url)
     {
+        error_log("RES DEBUG - get_property_urls_from_category() called for: {$category_url}");
         $max_attempts = $this->options['retry_attempts'];
         $retry_interval = RES_SCRAPER_CONFIG['retry_interval']; // Use retry_interval from constants.php
+        error_log("RES DEBUG - Max attempts: {$max_attempts}, Retry interval: {$retry_interval}");
 
         for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
             try {
-                $this->logger->debug("Fetching category page: {$category_url} (attempt {$attempt})");
+                error_log("RES DEBUG - Fetching category page: {$category_url} (attempt {$attempt})");
 
                 $response = wp_remote_get($category_url, array(
                     'timeout' => 30,
@@ -196,16 +202,23 @@ class Real_Estate_Scraper_Scraper
                 ));
 
                 if (is_wp_error($response)) {
+                    error_log('RES DEBUG - wp_remote_get returned WP_Error: ' . $response->get_error_message());
                     throw new Exception($response->get_error_message());
                 }
 
+                error_log('RES DEBUG - wp_remote_get successful, response code: ' . wp_remote_retrieve_response_code($response));
                 $body = wp_remote_retrieve_body($response);
+                error_log('RES DEBUG - Response body length: ' . strlen($body) . ' bytes');
+                
                 if (empty($body)) {
+                    error_log('RES DEBUG - Response body is empty!');
                     throw new Exception('Empty response body');
                 }
 
                 // Parse HTML to extract property URLs
+                error_log('RES DEBUG - About to parse property URLs from HTML');
                 $property_urls = $this->parse_property_urls_from_html($body);
+                error_log('RES DEBUG - parse_property_urls_from_html returned: ' . count($property_urls) . ' URLs');
 
                 // Limit to configured number
                 $limit = $this->options['properties_to_check'];
