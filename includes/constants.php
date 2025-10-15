@@ -25,7 +25,8 @@ if (!defined('ABSPATH')) {
 define('RES_SCRAPER_CONFIG', array(
     // 'property_list_urls_xpath' => '//div[contains(@class, "offers")]//a[@href]', // This node can be used for premium ads
     // 'property_list_urls_xpath' => '//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//div[contains(@class, "card-1")]//a[@href]', // This didn't work
-    'property_list_urls_xpath' => '//a[contains(@class, "card-1") and @href]',
+    // 'property_list_urls_xpath' => '//a[contains(@class, "card-1") and @href]', // This didn't work - links don't have card-1 class
+    'property_list_urls_xpath' => '//a[contains(@class, "card-box") and @href]',
     'property_data' => array(
         'title_xpath' => '//h1[@data-test-id="ad-title"]/span[1]',
         'content_xpath' => '//pre[@data-test-id="ad-description"]',
