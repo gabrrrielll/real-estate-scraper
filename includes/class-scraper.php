@@ -219,7 +219,8 @@ class Real_Estate_Scraper_Scraper
                 $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
                 if ($attempt < $max_attempts) {
-                    sleep($retry_interval);
+                    // TEMPORARILY DISABLED: sleep($retry_interval);
+                    error_log('RES DEBUG - Retry sleep disabled for testing');
                 } else {
                     $this->logger->log_final_error($e->getMessage());
                     throw $e;
@@ -364,7 +365,8 @@ class Real_Estate_Scraper_Scraper
                 $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
                 if ($attempt < $max_attempts) {
-                    sleep($retry_interval);
+                    // TEMPORARILY DISABLED: sleep($retry_interval);
+                    error_log('RES DEBUG - Retry sleep disabled for testing (fetch_property_data)');
                 } else {
                     $this->logger->log_final_error($e->getMessage());
                     throw $e;
