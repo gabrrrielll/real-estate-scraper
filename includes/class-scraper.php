@@ -260,13 +260,13 @@ class Real_Estate_Scraper_Scraper
         error_log('RES DEBUG - Using XPath from constants: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
         $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
         error_log('RES DEBUG - XPath found ' . $test_links->length . ' total links');
-        
+
         // Log all links for debugging
         foreach ($test_links as $index => $link) {
             $href = $link->getAttribute('href');
             error_log('RES DEBUG - Link[' . $index . ']: ' . $href);
         }
-        
+
         // TODO: TEMPORARY - Remove this return to enable actual scraping after debugging links
         error_log('RES DEBUG - Stopping execution here for link debugging. Remove this return to continue.');
         return array(); // Stop here for debugging - prevents actual property parsing
