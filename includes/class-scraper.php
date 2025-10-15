@@ -256,21 +256,25 @@ class Real_Estate_Scraper_Scraper
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
 
-        // --- TEMPORARY TEST: Log all h3 titles from class="filter-results-sorting" ---
-        error_log('RES DEBUG - Looking for h3 titles in filter-results-sorting...');
-        $h3_nodes = $xpath->query('//div[contains(@class, "filter-results-sorting")]//h3');
-        error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in filter-results-sorting');
-
+        // --- TEMPORARY TEST: Log all h3 titles from class="filter-results" ---
+        error_log('RES DEBUG - Looking for h3 titles in filter-results...');
+        $h3_nodes = $xpath->query('//div[contains(@class, "filter-results")]//h3');
+        error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in filter-results');
+        
         if ($h3_nodes->length > 0) {
             foreach ($h3_nodes as $index => $h3) {
                 error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
             }
         } else {
-            error_log('RES DEBUG - No h3 elements found in filter-results-sorting');
-            // Try to find if filter-results-sorting exists at all
-            $filter_div = $xpath->query('//div[contains(@class, "filter-results-sorting")]');
-            error_log('RES DEBUG - filter-results-sorting div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
+            error_log('RES DEBUG - No h3 elements found in filter-results');
+            // Try to find if filter-results exists at all
+            $filter_div = $xpath->query('//div[contains(@class, "filter-results")]');
+            error_log('RES DEBUG - filter-results div exists: ' . ($filter_div->length > 0 ? 'YES' : 'NO'));
         }
+        
+        // Also log how many links the XPath finds
+        $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
+        error_log('RES DEBUG - XPath found ' . $test_links->length . ' links using: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
         // --- END TEMPORARY TEST ---
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
