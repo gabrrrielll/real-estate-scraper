@@ -260,7 +260,7 @@ class Real_Estate_Scraper_Scraper
         error_log('RES DEBUG - Looking for h3 titles in filter-results-sorting...');
         $h3_nodes = $xpath->query('//div[contains(@class, "filter-results-sorting")]//h3');
         error_log('RES DEBUG - Found ' . $h3_nodes->length . ' h3 elements in filter-results-sorting');
-        
+
         if ($h3_nodes->length > 0) {
             foreach ($h3_nodes as $index => $h3) {
                 error_log('RES DEBUG - H3[' . $index . ']: ' . trim($h3->textContent));
