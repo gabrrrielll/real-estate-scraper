@@ -118,7 +118,6 @@ function testCron() {
 }
 
 function refreshLogs() {
-    console.log('RES DEBUG - refreshLogs() called');
     $.ajax({
         url: window.realEstateScraper.ajaxUrl,
         type: 'POST',
@@ -127,20 +126,13 @@ function refreshLogs() {
             nonce: window.realEstateScraper.nonce
         },
         success: function (response) {
-            console.log('RES DEBUG - AJAX success, response type:', typeof response);
-            console.log('RES DEBUG - AJAX response length:', response ? response.length : 'null/undefined');
             if (response && response.length > 0) {
-                console.log('RES DEBUG - Calling displayLogs with', response.length, 'entries');
                 displayLogs(response);
             } else {
-                console.log('RES DEBUG - No logs available, showing message');
                 $('#live-logs').html('<div class="log-entry log-info">No logs available.</div>');
             }
         },
         error: function (xhr, status, error) {
-            console.log('RES DEBUG - AJAX error:', error);
-            console.log('RES DEBUG - AJAX status:', status);
-            console.log('RES DEBUG - AJAX responseText:', xhr.responseText);
             $('#live-logs').html('<div class="log-entry log-error">Error loading logs: ' + error + '</div>');
         }
     });
@@ -193,14 +185,11 @@ function stopLiveLogs() {
 }
 
 function displayLogs(logs) {
-    console.log('RES DEBUG - displayLogs called with', logs.length, 'entries');
     const container = $('#live-logs');
-    console.log('RES DEBUG - Container found:', container.length > 0);
     let html = '';
 
     // Show last 50 log entries
     const recentLogs = logs.slice(-50);
-    console.log('RES DEBUG - Showing last', recentLogs.length, 'log entries');
 
     recentLogs.forEach(function (log) {
         if (log.trim()) {
@@ -209,7 +198,6 @@ function displayLogs(logs) {
         }
     });
 
-    console.log('RES DEBUG - Generated HTML length:', html.length);
     container.html(html);
 
     // Scroll to bottom
