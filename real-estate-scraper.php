@@ -189,9 +189,19 @@ class Real_Estate_Scraper
 
         // Run scraper
         error_log('RES DEBUG - Creating scraper instance...');
-        $scraper = Real_Estate_Scraper_Scraper::get_instance();
-        error_log('RES DEBUG - Scraper instance created, calling run_scraper()...');
-        $result = $scraper->run_scraper();
+        try {
+            $scraper = Real_Estate_Scraper_Scraper::get_instance();
+            error_log('RES DEBUG - Scraper instance created successfully, type: ' . get_class($scraper));
+            error_log('RES DEBUG - Calling run_scraper()...');
+            $result = $scraper->run_scraper();
+            error_log('RES DEBUG - run_scraper() completed without exception');
+        } catch (Exception $e) {
+            error_log('RES DEBUG - Exception in scraper: ' . $e->getMessage());
+            $result = array('success' => 0, 'message' => 'Scraper error: ' . $e->getMessage());
+        } catch (Error $e) {
+            error_log('RES DEBUG - Fatal error in scraper: ' . $e->getMessage());
+            $result = array('success' => 0, 'message' => 'Fatal error: ' . $e->getMessage());
+        }
         error_log('RES DEBUG - Scraper run completed. Result: ' . print_r($result, true));
 
         wp_send_json($result);

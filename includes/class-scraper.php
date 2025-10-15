@@ -25,10 +25,15 @@ class Real_Estate_Scraper_Scraper
 
     private function __construct()
     {
+        error_log('RES DEBUG - Scraper constructor called at: ' . current_time('mysql'));
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
+        error_log('RES DEBUG - Logger instance created');
         $this->mapper = Real_Estate_Scraper_Mapper::get_instance();
+        error_log('RES DEBUG - Mapper instance created');
         $this->options = get_option('real_estate_scraper_options', array());
+        error_log('RES DEBUG - Options loaded in constructor: ' . var_export($this->options, true));
         $this->logger->debug('SCRAPER DEBUG - Scraper constructor options: ' . var_export($this->options, true));
+        error_log('RES DEBUG - Scraper constructor completed');
     }
 
     /**
@@ -36,7 +41,9 @@ class Real_Estate_Scraper_Scraper
      */
     public function run_scraper()
     {
+        error_log('RES DEBUG - run_scraper() method called at: ' . current_time('mysql'));
         $start_time = microtime(true);
+        error_log('RES DEBUG - run_scraper() options: ' . var_export($this->options, true));
         $this->logger->debug('SCRAPER DEBUG - Running scraper. Current options: ' . var_export($this->options, true));
 
         try {
