@@ -256,15 +256,41 @@ class Real_Estate_Scraper_Scraper
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
 
-        // --- TEMPORARY DEBUG: Log all links found ---
-        error_log('RES DEBUG - Using XPath from constants: ' . RES_SCRAPER_CONFIG['property_list_urls_xpath']);
+        // --- TEMPORARY DEBUG: Test multiple XPath approaches ---
+        error_log('RES DEBUG - Testing different XPath approaches...');
+        
+        // Test 1: Current XPath from constants
         $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
-        error_log('RES DEBUG - XPath found ' . $test_links->length . ' total links');
-
-        // Log all links for debugging
-        foreach ($test_links as $index => $link) {
-            $href = $link->getAttribute('href');
-            error_log('RES DEBUG - Link[' . $index . ']: ' . $href);
+        error_log('RES DEBUG - Current XPath (' . RES_SCRAPER_CONFIG['property_list_urls_xpath'] . ') found: ' . $test_links->length . ' links');
+        
+        // Test 2: Offers class (we know this works)
+        $offers_links = $xpath->query('//div[contains(@class, "offers")]//a[@href]');
+        error_log('RES DEBUG - Offers XPath found: ' . $offers_links->length . ' links');
+        
+        // Test 3: All links with card-1 class
+        $card1_links = $xpath->query('//a[contains(@class, "card-1") and @href]');
+        error_log('RES DEBUG - Card-1 XPath found: ' . $card1_links->length . ' links');
+        
+        // Test 4: All links with card-box class
+        $cardbox_links = $xpath->query('//a[contains(@class, "card-box") and @href]');
+        error_log('RES DEBUG - Card-box XPath found: ' . $cardbox_links->length . ' links');
+        
+        // Test 5: All links in grid-4 main-cards
+        $grid_links = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//a[@href]');
+        error_log('RES DEBUG - Grid-4 main-cards XPath found: ' . $grid_links->length . ' links');
+        
+        // Log first few links from each working XPath
+        if ($offers_links->length > 0) {
+            error_log('RES DEBUG - First offers link: ' . $offers_links->item(0)->getAttribute('href'));
+        }
+        if ($card1_links->length > 0) {
+            error_log('RES DEBUG - First card-1 link: ' . $card1_links->item(0)->getAttribute('href'));
+        }
+        if ($cardbox_links->length > 0) {
+            error_log('RES DEBUG - First card-box link: ' . $cardbox_links->item(0)->getAttribute('href'));
+        }
+        if ($grid_links->length > 0) {
+            error_log('RES DEBUG - First grid link: ' . $grid_links->item(0)->getAttribute('href'));
         }
 
         // TODO: TEMPORARY - Remove this return to enable actual scraping after debugging links
