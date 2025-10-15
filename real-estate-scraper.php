@@ -1,5 +1,7 @@
 <?php
 
+error_log('RES DEBUG - real-estate-scraper.php file loaded at: ' . current_time('mysql'));
+
 /**
  * Plugin Name: Real Estate Scraper
  * Plugin URI: https://github.com/gabrrrielll/real-estate-scraper
