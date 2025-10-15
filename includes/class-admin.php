@@ -409,6 +409,9 @@ class Real_Estate_Scraper_Admin
                             <button type="button" id="test-cron" class="button">
                                 <?php _e('Test Cron', 'real-estate-scraper'); ?>
                             </button>
+                            <button type="button" id="toggle-cron" class="button button-secondary">
+                                <span id="cron-toggle-text"><?php _e('Stop Cron', 'real-estate-scraper'); ?></span>
+                            </button>
                         </div>
                     </div>
                     

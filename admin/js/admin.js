@@ -33,6 +33,12 @@ function bindEvents() {
         e.preventDefault();
         cleanLogs();
     });
+
+    // Toggle cron button
+    $('#toggle-cron').on('click', function (e) {
+        e.preventDefault();
+        toggleCron();
+    });
 }
 
 function runScraper() {
@@ -163,6 +169,53 @@ function cleanLogs() {
         },
         error: function (xhr, status, error) {
             showMessage('error', 'AJAX Error: ' + error);
+        },
+        complete: function () {
+            button.removeClass('res-button-loading').prop('disabled', false);
+        }
+    });
+}
+
+function toggleCron() {
+    const button = $('#toggle-cron');
+    const toggleText = $('#cron-toggle-text');
+    const originalText = toggleText.text();
+
+    button.addClass('res-button-loading').prop('disabled', true);
+    toggleText.text('Processing...');
+
+    $.ajax({
+        url: window.realEstateScraper.ajaxUrl,
+        type: 'POST',
+        data: {
+            action: 'res_toggle_cron',
+            nonce: window.realEstateScraper.nonce
+        },
+        success: function (response) {
+            if (response.success) {
+                showMessage('success', response.message);
+                
+                // Update button text based on cron status
+                if (response.cron_active) {
+                    toggleText.text('Stop Cron');
+                    button.removeClass('button-secondary').addClass('button-danger');
+                } else {
+                    toggleText.text('Start Cron');
+                    button.removeClass('button-danger').addClass('button-secondary');
+                }
+                
+                // Refresh page to update status
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
+            } else {
+                showMessage('error', response.message);
+                toggleText.text(originalText);
+            }
+        },
+        error: function (xhr, status, error) {
+            showMessage('error', 'AJAX Error: ' + error);
+            toggleText.text(originalText);
         },
         complete: function () {
             button.removeClass('res-button-loading').prop('disabled', false);

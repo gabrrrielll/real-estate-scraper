@@ -86,6 +86,7 @@ class Real_Estate_Scraper
         add_action('wp_ajax_res_get_logs', array($this, 'ajax_get_logs'));
         add_action('wp_ajax_res_clean_logs', array($this, 'ajax_clean_logs'));
         add_action('wp_ajax_res_test_cron', array($this, 'ajax_test_cron'));
+        add_action('wp_ajax_res_toggle_cron', array($this, 'ajax_toggle_cron'));
     }
 
     public function init()
@@ -255,6 +256,49 @@ class Real_Estate_Scraper
 
         $cron = Real_Estate_Scraper_Cron::get_instance();
         $result = $cron->test_cron();
+
+        wp_send_json($result);
+    }
+
+    /**
+     * AJAX handler for toggling cron job
+     */
+    public function ajax_toggle_cron()
+    {
+        check_ajax_referer('res_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
+        }
+
+        error_log('RES DEBUG - AJAX toggle_cron called');
+
+        $cron = Real_Estate_Scraper_Cron::get_instance();
+        $options = get_option('real_estate_scraper_options', array());
+        
+        // Check if cron is currently active
+        $is_active = wp_next_scheduled('real_estate_scraper_cron');
+        
+        if ($is_active) {
+            // Stop cron
+            wp_clear_scheduled_hook('real_estate_scraper_cron');
+            $result = array(
+                'success' => true,
+                'message' => __('Cron job stopped successfully.', 'real-estate-scraper'),
+                'cron_active' => false
+            );
+            error_log('RES DEBUG - Cron job stopped');
+        } else {
+            // Start cron
+            $interval = $options['cron_interval'] ?? 'hourly';
+            $cron->schedule_cron($interval);
+            $result = array(
+                'success' => true,
+                'message' => __('Cron job started successfully.', 'real-estate-scraper'),
+                'cron_active' => true
+            );
+            error_log('RES DEBUG - Cron job started with interval: ' . $interval);
+        }
 
         wp_send_json($result);
     }

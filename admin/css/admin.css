@@ -249,6 +249,33 @@
     color: #0c5460;
 }
 
+/* Toggle Cron Button Styles */
+.button-danger {
+    background-color: #d63638 !important;
+    border-color: #d63638 !important;
+    color: #fff !important;
+}
 
+.button-danger:hover {
+    background-color: #b32d2e !important;
+    border-color: #b32d2e !important;
+    color: #fff !important;
+}
 
+.button-secondary {
+    background-color: #2271b1 !important;
+    border-color: #2271b1 !important;
+    color: #fff !important;
+}
+
+.button-secondary:hover {
+    background-color: #135e96 !important;
+    border-color: #135e96 !important;
+    color: #fff !important;
+}
+
+#toggle-cron {
+    margin-top: 10px;
+    width: 100%;
+}
 
