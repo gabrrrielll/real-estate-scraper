@@ -210,14 +210,18 @@ class Real_Estate_Scraper
 
     public function ajax_get_logs()
     {
+        error_log('RES DEBUG - AJAX get_logs called');
         check_ajax_referer('res_nonce', 'nonce');
+        error_log('RES DEBUG - AJAX get_logs nonce check passed');
 
         if (!current_user_can('manage_options')) {
+            error_log('RES DEBUG - AJAX get_logs user does not have manage_options');
             wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
         }
 
         $logger = Real_Estate_Scraper_Logger::get_instance();
         $logs = $logger->get_today_logs();
+        error_log('RES DEBUG - AJAX get_logs returning ' . count($logs) . ' log entries');
 
         wp_send_json($logs);
     }

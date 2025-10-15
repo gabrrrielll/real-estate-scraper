@@ -90,13 +90,20 @@ class Real_Estate_Scraper_Logger
     public function get_today_logs()
     {
         $log_file = $this->get_log_file();
+        error_log('RES DEBUG - Logger: Looking for log file: ' . $log_file);
+        error_log('RES DEBUG - Logger: Log file exists: ' . (file_exists($log_file) ? 'YES' : 'NO'));
+        error_log('RES DEBUG - Logger: Log dir exists: ' . (is_dir($this->log_dir) ? 'YES' : 'NO'));
 
         if (!file_exists($log_file)) {
+            error_log('RES DEBUG - Logger: Log file not found, returning empty array');
             return array();
         }
 
         $logs = file_get_contents($log_file);
-        return array_filter(explode(PHP_EOL, $logs));
+        error_log('RES DEBUG - Logger: Log file size: ' . strlen($logs) . ' bytes');
+        $log_lines = array_filter(explode(PHP_EOL, $logs));
+        error_log('RES DEBUG - Logger: Found ' . count($log_lines) . ' log lines');
+        return $log_lines;
     }
 
     /**
