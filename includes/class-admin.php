@@ -559,16 +559,16 @@ class Real_Estate_Scraper_Admin
             error_log('RES DEBUG - All Category URLs processed with sanitization: ' . print_r($options['category_urls'], true));
         }
 
-        // Sanitize category mapping (commented out)
-        // if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
-        //     $options['category_mapping'] = array(
-        //         'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
-        //         'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
-        //         'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
-        //         'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
-        //     );
-        //     error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
-        // }
+        // Sanitize category mapping
+        if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
+            $options['category_mapping'] = array(
+                'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
+                'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
+                'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
+                'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
+            );
+            error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
+        }
 
         // Other options (all activated for testing)
         $options['cron_interval'] = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly';
