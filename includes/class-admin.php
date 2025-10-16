@@ -502,7 +502,7 @@ class Real_Estate_Scraper_Admin
         $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
         $post_enable_cron = isset($_POST['enable_cron']) ? 1 : 0; // Correctly handle checkbox value: 1 if checked, 0 if unchecked
-        error_log('RES DEBUG - POST['enable_cron'] raw: ' . (isset($_POST['enable_cron']) ? $_POST['enable_cron'] : 'NOT SET')); // NEW LOG
+        error_log('RES DEBUG - POST[\'enable_cron\'] raw: ' . (isset($_POST['enable_cron']) ? $_POST['enable_cron'] : 'NOT SET')); // NEW LOG
         error_log('RES DEBUG - $post_enable_cron after processing: ' . $post_enable_cron); // NEW LOG
 
         $db_category_urls = $options['category_urls'] ?? [];
@@ -622,7 +622,7 @@ class Real_Estate_Scraper_Admin
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 
-        error_log('RES DEBUG - Final options['enable_cron'] before update_option: ' . ($options['enable_cron'] ?? 'NOT SET')); // NEW LOG
+        error_log('RES DEBUG - Final options[\'enable_cron\'] before update_option: ' . ($options['enable_cron'] ?? 'NOT SET')); // NEW LOG
         error_log('RES DEBUG - Final options array: ' . print_r($options, true)); // Reverted log message
 
         // Get current options for comparison
@@ -646,7 +646,7 @@ class Real_Estate_Scraper_Admin
         $saved_options = get_option('real_estate_scraper_options', array());
         error_log('RES DEBUG - Options after update_option: ' . print_r($saved_options, true));
 
-        error_log('RES DEBUG - Saved options['enable_cron'] after update_option: ' . ($saved_options['enable_cron'] ?? 'NOT SET')); // NEW LOG
+        error_log('RES DEBUG - Saved options[\'enable_cron\'] after update_option: ' . ($saved_options['enable_cron'] ?? 'NOT SET')); // NEW LOG
 
         // Check if the options match what we tried to save
         $options_match = ($saved_options == $options);
