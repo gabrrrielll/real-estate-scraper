@@ -101,23 +101,53 @@ class Real_Estate_Scraper_Scraper
                 );
             }
 
-            // NEW LOGIC: Determine next category based on last added property
-            $next_category = $this->get_next_category_for_rotation();
-            error_log("RES DEBUG - Next category to process: {$next_category}");
+            // NEW LOGIC: Process categories in rotation until max_ads_per_session limit is reached
+            $category_index = 0;
+            $category_keys = array_keys($valid_categories);
+            
+            while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
+                // Determine next category based on last added property (only for first iteration)
+                if ($category_index == 0) {
+                    $next_category = $this->get_next_category_for_rotation();
+                    error_log("RES DEBUG - Starting rotation from category: {$next_category}");
+                } else {
+                    // For subsequent iterations, use circular rotation
+                    $next_category = $category_keys[$category_index % count($category_keys)];
+                    error_log("RES DEBUG - Continuing rotation with category: {$next_category}");
+                }
+                
+                if (!empty($next_category) && isset($valid_categories[$next_category])) {
+                    $url = $valid_categories[$next_category];
+                    error_log("RES DEBUG - Processing category: {$next_category}, URL: {$url}");
 
-            if (!empty($next_category) && isset($valid_categories[$next_category])) {
-                $url = $valid_categories[$next_category];
-                error_log("RES DEBUG - Processing category: {$next_category}, URL: {$url}");
+                    // Process one property from this category
+                    $category_stats = $this->process_category_rotation($next_category, $url, $max_ads_global, $ads_processed_global);
 
-                // Process one property from this category
-                $category_stats = $this->process_category_rotation($next_category, $url, $max_ads_global, $ads_processed_global);
+                    $stats['total_found'] += $category_stats['found'];
+                    $stats['new_added'] += $category_stats['new'];
+                    $stats['duplicates_skipped'] += $category_stats['duplicates'];
+                    $stats['errors'] += $category_stats['errors'];
 
-                $stats['total_found'] += $category_stats['found'];
-                $stats['new_added'] += $category_stats['new'];
-                $stats['duplicates_skipped'] += $category_stats['duplicates'];
-                $stats['errors'] += $category_stats['errors'];
-            } else {
-                error_log("RES DEBUG - No valid next category found or category not in valid categories");
+                    // Update global counter
+                    $ads_processed_global += $category_stats['found'];
+                    
+                    // If no properties were found in this category, move to next
+                    if ($category_stats['found'] == 0) {
+                        error_log("RES DEBUG - No properties found in category {$next_category}, moving to next");
+                    }
+                } else {
+                    error_log("RES DEBUG - No valid next category found or category not in valid categories");
+                    break;
+                }
+                
+                // Move to next category
+                $category_index++;
+                
+                // If we've gone through all categories and no new properties were added, break
+                if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
+                    error_log("RES DEBUG - Completed full rotation with no new properties, stopping");
+                    break;
+                }
             }
             // }
             // --- END TEMPORARY TEST ---
@@ -737,15 +767,15 @@ class Real_Estate_Scraper_Scraper
     {
         // Get property type terms for this property
         $property_types = wp_get_post_terms($property->ID, 'property_type');
-        
+
         if (is_wp_error($property_types) || empty($property_types)) {
             error_log('RES DEBUG - Property has no property_type terms');
             return null;
         }
-        
+
         $property_type_id = $property_types[0]->term_id;
         error_log('RES DEBUG - Property type ID: ' . $property_type_id);
-        
+
         // Map property type ID to category using category_mapping
         foreach ($this->options['category_mapping'] as $category_key => $type_id) {
             if ($type_id == $property_type_id) {
@@ -753,7 +783,7 @@ class Real_Estate_Scraper_Scraper
                 return $category_key;
             }
         }
-        
+
         error_log('RES DEBUG - Could not map property type ID ' . $property_type_id . ' to any category');
         error_log('RES DEBUG - Available category mappings: ' . var_export($this->options['category_mapping'], true));
         return null;
