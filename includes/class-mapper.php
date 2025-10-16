@@ -93,7 +93,8 @@ class Real_Estate_Scraper_Mapper
             'fave_property_map_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
             'fave_property_map_longitude' => $this->clean_coordinate($property_data['longitude']),
-            'fave_property_source_url' => $property_data['source_url']
+            'fave_property_source_url' => $property_data['source_url'],
+            'fave_private_note' => 'Vezi anuntul original aici: @' . $property_data['source_url']
         );
 
         foreach ($meta_fields as $key => $value) {
@@ -400,12 +401,12 @@ class Real_Estate_Scraper_Mapper
     private function format_address_components($address)
     {
         $components = array();
-        
+
         // Extract components
         $street = trim($address['street'] ?? '');
         $house_number = trim($address['house_number'] ?? '');
         $postal_code = trim($address['postal_code'] ?? '');
-        
+
         // Extract sector from display_name if available (for Bucharest)
         $sector = '';
         if (!empty($address['display_name'])) {
@@ -413,35 +414,35 @@ class Real_Estate_Scraper_Mapper
                 $sector = 'Sector ' . $matches[1];
             }
         }
-        
+
         // Build address in desired order: Street, Number, Sector, Postal Code (NO CITY, NO COUNTRY)
-        
+
         // 1. Street
         if (!empty($street)) {
             $components[] = $street;
         }
-        
+
         // 2. House number
         if (!empty($house_number)) {
             $components[] = $house_number;
         }
-        
+
         // 3. Sector
         if (!empty($sector)) {
             $components[] = $sector;
         }
-        
+
         // 4. Postal code
         if (!empty($postal_code)) {
             $components[] = $postal_code;
         }
-        
+
         // Join components with comma and space
         $formatted = implode(', ', $components);
-        
+
         error_log('RES DEBUG - Main address components: Street=' . $street . ', Number=' . $house_number . ', Sector=' . $sector . ', Postal=' . $postal_code);
         error_log('RES DEBUG - Formatted main address (no city/country): ' . $formatted);
-        
+
         return $formatted;
     }
 
