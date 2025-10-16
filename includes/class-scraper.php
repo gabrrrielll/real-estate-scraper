@@ -721,9 +721,11 @@ class Real_Estate_Scraper_Scraper
     private function extract_phone_number($xpath)
     {
         error_log('RES DEBUG - === EXTRACTING PHONE NUMBER ===');
-        
+
         // Common phone number patterns to try
         $phone_patterns = array(
+            // First try the existing XPath from constants.php
+            RES_SCRAPER_CONFIG['property_data']['phone_xpath'],
             // Romanian phone patterns
             '//text()[contains(., "07") and string-length(normalize-space(.)) <= 15]',
             '//text()[contains(., "+407") and string-length(normalize-space(.)) <= 15]',
@@ -749,7 +751,7 @@ class Real_Estate_Scraper_Scraper
             if ($nodes->length > 0) {
                 foreach ($nodes as $node) {
                     $text = trim($node->textContent ?? $node->nodeValue ?? '');
-                    
+
                     // Clean and validate phone number
                     $phone = $this->clean_phone_number($text);
                     if (!empty($phone)) {
@@ -771,12 +773,12 @@ class Real_Estate_Scraper_Scraper
     {
         // Remove all non-digit characters except +
         $cleaned = preg_replace('/[^\d+]/', '', $text);
-        
+
         // Romanian phone number patterns
         if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
             return '0' . $matches[2]; // Return with 0 prefix
         }
-        
+
         // If it starts with tel:, extract the number
         if (strpos($text, 'tel:') !== false) {
             $cleaned = str_replace('tel:', '', $text);
@@ -785,7 +787,7 @@ class Real_Estate_Scraper_Scraper
                 return '0' . $matches[2];
             }
         }
-        
+
         return '';
     }
 }

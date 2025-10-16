@@ -559,12 +559,12 @@ class Real_Estate_Scraper_Mapper
 
         // Remove all non-digit characters except +
         $cleaned = preg_replace('/[^\d+]/', '', $phone);
-        
+
         // Romanian phone number patterns
         if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
             return '0' . $matches[2]; // Return with 0 prefix
         }
-        
+
         // If it starts with tel:, extract the number
         if (strpos($phone, 'tel:') !== false) {
             $cleaned = str_replace('tel:', '', $phone);
@@ -573,7 +573,7 @@ class Real_Estate_Scraper_Mapper
                 return '0' . $matches[2];
             }
         }
-        
+
         return '';
     }
 
