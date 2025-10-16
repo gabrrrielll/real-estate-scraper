@@ -1,6 +1,6 @@
 <?php
 
-error_log('RES DEBUG - real-estate-scraper.php file loaded at: ' . current_time('mysql')); // Load the plugin file
+// error_log('RES DEBUG - real-estate-scraper.php file loaded at: ' . current_time('mysql')); // Load the plugin file
 
 /**
  * Plugin Name: Real Estate Scraper
@@ -57,17 +57,17 @@ class Real_Estate_Scraper
     public static function get_instance()
     {
         if (null === self::$instance) {
-            error_log('RES DEBUG - Creating new plugin instance');
+            // error_log('RES DEBUG - Creating new plugin instance');
             self::$instance = new self();
         } else {
-            error_log('RES DEBUG - Returning existing plugin instance');
+            // error_log('RES DEBUG - Returning existing plugin instance');
         }
         return self::$instance;
     }
 
     private function __construct()
     {
-        error_log('RES DEBUG - Real Estate Scraper plugin constructor called');
+        // error_log('RES DEBUG - Real Estate Scraper plugin constructor called');
         $this->init_hooks();
     }
 
@@ -90,18 +90,18 @@ class Real_Estate_Scraper
 
     public function init()
     {
-        error_log('RES DEBUG - Plugin init function called');
+        // error_log('RES DEBUG - Plugin init function called');
 
         // Load text domain
         load_plugin_textdomain('real-estate-scraper', false, dirname(plugin_basename(__FILE__)) . '/languages');
 
         // Initialize components
-        error_log('RES DEBUG - Initializing components');
+        // error_log('RES DEBUG - Initializing components');
         Real_Estate_Scraper_Logger::get_instance();
         Real_Estate_Scraper_Admin::get_instance();
         Real_Estate_Scraper_Cron::get_instance();
 
-        error_log('RES DEBUG - All components initialized');
+        // error_log('RES DEBUG - All components initialized');
     }
 
     public function activate()

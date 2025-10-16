@@ -23,7 +23,7 @@ class Real_Estate_Scraper_Admin
 
     private function __construct()
     {
-        error_log('RES DEBUG - Admin class constructor called');
+        // error_log('RES DEBUG - Admin class constructor called');
 
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
         $this->options = get_option('real_estate_scraper_options', array());
@@ -36,7 +36,7 @@ class Real_Estate_Scraper_Admin
 
         add_action('admin_post_res_save_settings', array($this, 'handle_save_settings'));
 
-        error_log('RES DEBUG - Admin class hooks added');
+        // error_log('RES DEBUG - Admin class hooks added');
     }
 
     /**
@@ -406,6 +406,19 @@ class Real_Estate_Scraper_Admin
                                     </td>
                                 </tr>
                                 <tr>
+                                    <th scope="row"><?php _e('Default Status', 'real-estate-scraper'); ?></th>
+                                    <td>
+                                        <select name="default_status">
+                                            <option value="draft" <?php selected($options['default_status'] ?? 'draft', 'draft'); ?>>
+                                                <?php _e('Draft', 'real-estate-scraper'); ?>
+                                            </option>
+                                            <option value="publish" <?php selected($options['default_status'] ?? 'draft', 'publish'); ?>>
+                                                <?php _e('Published', 'real-estate-scraper'); ?>
+                                            </option>
+                                        </select>
+                                    </td>
+                                </tr>
+                                <tr>
                                     <th scope="row"><?php _e('Enable Cron', 'real-estate-scraper'); ?></th>
                                     <td>
                                         <label for="res_enable_cron">
@@ -570,7 +583,7 @@ class Real_Estate_Scraper_Admin
         }
 
         // Check if required fields are present
-        $required_fields = array('category_urls', 'properties_to_check', 'cron_interval'); // Removed default_status as it's commented out in the form
+        $required_fields = array('category_urls', 'properties_to_check', 'cron_interval', 'default_status');
         $missing_fields = array();
 
         foreach ($required_fields as $field) {
@@ -657,7 +670,7 @@ class Real_Estate_Scraper_Admin
             // Manage cron based on enable_cron setting
             try {
                 $cron = Real_Estate_Scraper_Cron::get_instance();
-                
+
                 if ($options['enable_cron'] == 1) {
                     // Cron is enabled, schedule/update it
                     $cron->schedule_cron($options['cron_interval']);
