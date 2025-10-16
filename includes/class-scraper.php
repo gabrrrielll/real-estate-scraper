@@ -334,47 +334,6 @@ class Real_Estate_Scraper_Scraper
         @$dom->loadHTML($html);
         $xpath = new DOMXPath($dom);
 
-        // --- TEMPORARY DEBUG: Test multiple XPath approaches ---
-        error_log('RES DEBUG - Testing different XPath approaches...');
-
-        // Test 1: Current XPath from constants
-        $test_links = $xpath->query(RES_SCRAPER_CONFIG['property_list_urls_xpath']);
-        error_log('RES DEBUG - Current XPath (' . RES_SCRAPER_CONFIG['property_list_urls_xpath'] . ') found: ' . $test_links->length . ' links');
-
-        // Test 2: Offers class (we know this works)
-        $offers_links = $xpath->query('//div[contains(@class, "offers")]//a[@href]');
-        error_log('RES DEBUG - Offers XPath found: ' . $offers_links->length . ' links');
-
-        // Test 3: All links with card-1 class
-        $card1_links = $xpath->query('//a[contains(@class, "card-1") and @href]');
-        error_log('RES DEBUG - Card-1 XPath found: ' . $card1_links->length . ' links');
-
-        // Test 4: All links with card-box class
-        $cardbox_links = $xpath->query('//a[contains(@class, "card-box") and @href]');
-        error_log('RES DEBUG - Card-box XPath found: ' . $cardbox_links->length . ' links');
-
-        // Test 5: All links in grid-4 main-cards
-        $grid_links = $xpath->query('//div[contains(@class, "grid-4") and contains(@class, "main-cards")]//a[@href]');
-        error_log('RES DEBUG - Grid-4 main-cards XPath found: ' . $grid_links->length . ' links');
-
-        // Log first few links from each working XPath
-        if ($offers_links->length > 0) {
-            error_log('RES DEBUG - First offers link: ' . $offers_links->item(0)->getAttribute('href'));
-        }
-        if ($card1_links->length > 0) {
-            error_log('RES DEBUG - First card-1 link: ' . $card1_links->item(0)->getAttribute('href'));
-        }
-        if ($cardbox_links->length > 0) {
-            error_log('RES DEBUG - First card-box link: ' . $cardbox_links->item(0)->getAttribute('href'));
-        }
-        if ($grid_links->length > 0) {
-            error_log('RES DEBUG - First grid link: ' . $grid_links->item(0)->getAttribute('href'));
-        }
-
-        // TODO: TEMPORARY - Remove this return to enable actual scraping after debugging links
-        // error_log('RES DEBUG - Stopping execution here for link debugging. Remove this return to continue.');
-        // return array(); // Stop here for debugging - prevents actual property parsing
-        // --- END TEMPORARY DEBUG ---
 
         // Look for property links - this will need to be adjusted based on actual HTML structure
         // Use XPath from constants file
@@ -707,38 +666,38 @@ class Real_Estate_Scraper_Scraper
     private function get_next_category_for_rotation()
     {
         error_log('RES DEBUG - === DETERMINING NEXT CATEGORY FOR ROTATION ===');
-        
+
         // Define category order
         $category_order = array('apartamente', 'garsoniere', 'case_vile', 'spatii_comerciale');
-        
+
         // Get last added property
         $last_property = $this->get_last_added_property();
-        
+
         if (!$last_property) {
             error_log('RES DEBUG - No properties found, starting with first category: apartamente');
             return 'apartamente';
         }
-        
+
         // Get category of last property
         $last_category = $this->get_property_category($last_property);
-        
+
         if (!$last_category) {
             error_log('RES DEBUG - Could not determine category of last property, starting with first category: apartamente');
             return 'apartamente';
         }
-        
+
         error_log('RES DEBUG - Last property category: ' . $last_category);
-        
+
         // Find next category in rotation
         $current_index = array_search($last_category, $category_order);
         if ($current_index === false) {
             error_log('RES DEBUG - Last category not found in order, starting with first category: apartamente');
             return 'apartamente';
         }
-        
+
         $next_index = ($current_index + 1) % count($category_order);
         $next_category = $category_order[$next_index];
-        
+
         error_log('RES DEBUG - Next category in rotation: ' . $next_category);
         return $next_category;
     }
@@ -761,12 +720,12 @@ class Real_Estate_Scraper_Scraper
                 )
             )
         ));
-        
+
         if (!empty($last_property)) {
             error_log('RES DEBUG - Last property found: ID ' . $last_property[0]->ID . ', Title: ' . $last_property[0]->post_title);
             return $last_property[0];
         }
-        
+
         error_log('RES DEBUG - No properties found in database');
         return null;
     }
@@ -777,14 +736,14 @@ class Real_Estate_Scraper_Scraper
     private function get_property_category($property)
     {
         $source_url = get_post_meta($property->ID, 'fave_property_source_url', true);
-        
+
         if (empty($source_url)) {
             error_log('RES DEBUG - Property has no source URL');
             return null;
         }
-        
+
         error_log('RES DEBUG - Property source URL: ' . $source_url);
-        
+
         // Check which category URL this property belongs to
         foreach ($this->options['category_urls'] as $category_key => $category_url) {
             if (strpos($source_url, $category_url) !== false) {
@@ -792,7 +751,7 @@ class Real_Estate_Scraper_Scraper
                 return $category_key;
             }
         }
-        
+
         error_log('RES DEBUG - Could not determine property category from URL');
         return null;
     }
