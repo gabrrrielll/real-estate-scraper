@@ -570,7 +570,7 @@ class Real_Estate_Scraper_Admin
         }
 
         // Check if required fields are present
-        $required_fields = array('category_urls', 'properties_to_check', 'cron_interval', 'default_status'); // Added default_status
+        $required_fields = array('category_urls', 'properties_to_check', 'cron_interval'); // Removed default_status as it's commented out in the form
         $missing_fields = array();
 
         foreach ($required_fields as $field) {
