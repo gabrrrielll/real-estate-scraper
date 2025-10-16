@@ -51,12 +51,6 @@ function bindEvents() {
         e.preventDefault();
         cleanLogs();
     });
-
-    // Toggle cron button
-    $('#toggle-cron').on('click', function (e) {
-        e.preventDefault();
-        toggleCron();
-    });
 }
 
 function runScraper() {
@@ -190,55 +184,6 @@ function cleanLogs() {
         },
         complete: function () {
             button.removeClass('res-button-loading').prop('disabled', false);
-        }
-    });
-}
-
-function toggleCron() {
-    const button = $('#toggle-cron');
-    const toggleText = $('#cron-toggle-text');
-    const originalText = toggleText.text();
-
-    button.addClass('res-button-loading').prop('disabled', true);
-    toggleText.text('Processing...');
-
-    $.ajax({
-        url: window.realEstateScraper.ajaxUrl,
-        type: 'POST',
-        data: {
-            action: 'res_toggle_cron',
-            nonce: window.realEstateScraper.nonce
-        },
-        success: function (response) {
-            if (response.success) {
-                showMessage('success', response.message);
-
-                // Update button text based on cron status
-                if (response.cron_active) {
-                    toggleText.text(window.realEstateScraper.strings.stopCron);
-                    button.removeClass('button-secondary').addClass('button-danger');
-                } else {
-                    toggleText.text(window.realEstateScraper.strings.startCron);
-                    button.removeClass('button-danger').addClass('button-secondary');
-                }
-                
-                // Update Next Run and Last Run times
-                $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (response.next_run_display || 'N/A'));
-                $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (response.last_run_display || 'N/A'));
-
-            } else {
-                showMessage('error', response.message);
-                toggleText.text(originalText);
-                button.removeClass('res-button-loading').prop('disabled', false); // Only reset on error
-            }
-        },
-        error: function (xhr, status, error) {
-            showMessage('error', 'AJAX Error: ' + error);
-            toggleText.text(originalText);
-            button.removeClass('res-button-loading').prop('disabled', false); // Reset on error
-        },
-        complete: function () {
-            // Removed button reset from here. The server response now contains updated cron times to set manually.
         }
     });
 }

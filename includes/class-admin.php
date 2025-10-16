@@ -405,24 +405,17 @@ class Real_Estate_Scraper_Admin
                                         <p class="description"><?php _e('Maximum number of ads to publish per scraping session (across all categories).', 'real-estate-scraper'); ?></p>
                                     </td>
                                 </tr>
-                                <?php
-                                // */
-        ?>
                                 <tr>
-                                    <th scope="row"><?php _e('Default Status', 'real-estate-scraper'); ?></th>
+                                    <th scope="row"><?php _e('Enable Cron', 'real-estate-scraper'); ?></th>
                                     <td>
-                                        <select name="default_status">
-                                            <option value="draft" <?php selected($options['default_status'] ?? 'draft', 'draft'); ?>>
-                                                <?php _e('Draft', 'real-estate-scraper'); ?>
-                                            </option>
-                                            <option value="publish" <?php selected($options['default_status'] ?? 'draft', 'publish'); ?>>
-                                                <?php _e('Published', 'real-estate-scraper'); ?>
-                                            </option>
-                                        </select>
+                                        <label for="res_enable_cron">
+                                            <input type="checkbox" id="res_enable_cron" name="enable_cron" value="1" <?php checked(1, $options['enable_cron'] ?? 1); ?> />
+                                            <?php _e('Check to enable automatic scraping via cron job.', 'real-estate-scraper'); ?>
+                                        </label>
                                     </td>
                                 </tr>
                                 <?php
-        // */
+                                // */
         ?>
                             </table>
                         </div>
@@ -434,6 +427,7 @@ class Real_Estate_Scraper_Admin
                 <div class="res-sidebar">
                     <div class="res-status-box">
                         <h3><?php _e('Scraper Status', 'real-estate-scraper'); ?></h3>
+                        <p><strong><?php _e('Cron Status:', 'real-estate-scraper'); ?></strong> <?php echo ($options['enable_cron'] ?? 1) ? __('Active', 'real-estate-scraper') : __('Inactive', 'real-estate-scraper'); ?></p>
                         <p><strong><?php _e('Next Run:', 'real-estate-scraper'); ?></strong> <?php echo $next_run; ?></p>
                         <p><strong><?php _e('Last Run:', 'real-estate-scraper'); ?></strong> <?php echo $last_run; ?></p>
                         
@@ -443,9 +437,6 @@ class Real_Estate_Scraper_Admin
                             </button>
                             <button type="button" id="test-cron" class="button">
                                 <?php _e('Test Cron', 'real-estate-scraper'); ?>
-                            </button>
-                            <button type="button" id="toggle-cron" class="button button-secondary">
-                                <span id="cron-toggle-text"><?php _e('Stop Cron', 'real-estate-scraper'); ?></span>
                             </button>
                         </div>
                     </div>
@@ -510,12 +501,14 @@ class Real_Estate_Scraper_Admin
         $post_cron_interval = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly'; // Activated, no sanitization
         $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
+        $post_enable_cron = isset($_POST['enable_cron']) ? intval($_POST['enable_cron']) : 0; // Activated, no sanitization
 
         $db_category_urls = $options['category_urls'] ?? [];
         $db_category_mapping = []; // Commented out
         $db_cron_interval = $options['cron_interval'] ?? 'hourly'; // Activated
         $db_properties_to_check = $options['properties_to_check'] ?? 10;
         $db_default_status = $options['default_status'] ?? 'draft'; // Activated
+        $db_enable_cron = $options['enable_cron'] ?? 0; // Activated
 
         $save_successful = (
             (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente']) &&
@@ -524,7 +517,8 @@ class Real_Estate_Scraper_Admin
             (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']) &&
             ($post_properties_to_check == $db_properties_to_check) &&
             ($post_cron_interval == $db_cron_interval) &&
-            ($post_default_status == $db_default_status) // Added for Default Status
+            ($post_default_status == $db_default_status) && // Added for Default Status
+            ($post_enable_cron == $db_enable_cron) // Added for Enable Cron
         );
 
         // Old logic: $save_successful = (
@@ -622,6 +616,7 @@ class Real_Estate_Scraper_Admin
         $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $options['max_ads_per_session'] = isset($_POST['max_ads_per_session']) ? intval($_POST['max_ads_per_session']) : 4;
         $options['default_status'] = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
+        $options['enable_cron'] = isset($_POST['enable_cron']) ? intval($_POST['enable_cron']) : 0; // Activated, no sanitization
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 

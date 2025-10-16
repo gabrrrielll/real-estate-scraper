@@ -86,7 +86,6 @@ class Real_Estate_Scraper
         add_action('wp_ajax_res_get_logs', array($this, 'ajax_get_logs'));
         add_action('wp_ajax_res_clean_logs', array($this, 'ajax_clean_logs'));
         add_action('wp_ajax_res_test_cron', array($this, 'ajax_test_cron'));
-        add_action('wp_ajax_res_toggle_cron', array($this, 'ajax_toggle_cron'));
     }
 
     public function init()
@@ -100,7 +99,18 @@ class Real_Estate_Scraper
         error_log('RES DEBUG - Initializing components');
         Real_Estate_Scraper_Logger::get_instance();
         Real_Estate_Scraper_Admin::get_instance();
-        Real_Estate_Scraper_Cron::get_instance();
+        
+        // Get options to check cron status
+        $options = get_option('real_estate_scraper_options', array());
+        $cron_enabled = ($options['enable_cron'] ?? 1) == 1;
+
+        $cron_instance = Real_Estate_Scraper_Cron::get_instance();
+
+        if ($cron_enabled) {
+            $cron_instance->schedule_cron();
+        } else {
+            $cron_instance->clear_cron();
+        }
 
         error_log('RES DEBUG - All components initialized');
     }
@@ -135,14 +145,17 @@ class Real_Estate_Scraper
             'properties_to_check' => 10,
             'max_ads_per_session' => 4,
             'default_status' => 'draft',
+            'enable_cron' => 1, // NEW: Cron enabled by default
             'retry_attempts' => 2,
             'retry_interval' => 30
         );
 
         add_option('real_estate_scraper_options', $default_options);
 
-        // Schedule cron
-        Real_Estate_Scraper_Cron::get_instance()->schedule_cron();
+        // Schedule cron only if enabled
+        if ( ($default_options['enable_cron'] ?? 1) == 1 ) {
+            Real_Estate_Scraper_Cron::get_instance()->schedule_cron();
+        }
     }
 
     public function deactivate()
@@ -256,50 +269,6 @@ class Real_Estate_Scraper
 
         $cron = Real_Estate_Scraper_Cron::get_instance();
         $result = $cron->test_cron();
-
-        wp_send_json($result);
-    }
-
-    /**
-     * AJAX handler for toggling cron job
-     */
-    public function ajax_toggle_cron()
-    {
-        check_ajax_referer('res_nonce', 'nonce');
-
-        if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
-        }
-
-        error_log('RES DEBUG - AJAX toggle_cron called');
-
-        $cron = Real_Estate_Scraper_Cron::get_instance();
-        $options = get_option('real_estate_scraper_options', array());
-
-        // Check if cron is currently active
-        $is_active = wp_next_scheduled('real_estate_scraper_cron');
-
-        if ($is_active) {
-            // Stop cron
-            wp_clear_scheduled_hook('real_estate_scraper_cron');
-            $result = array(
-                'success' => true,
-                'message' => __('Cron job stopped successfully.', 'real-estate-scraper'),
-                'cron_active' => false
-            );
-            error_log('RES DEBUG - Cron job stopped');
-        } else {
-            // Start cron
-            $interval = $options['cron_interval'] ?? 'hourly';
-            $cron->schedule_cron($interval);
-            error_log('RES DEBUG - Cron job started with interval: ' . $interval);
-        }
-
-        $cron_status_data = $this->get_cron_run_times(); // Re-use the existing helper
-
-        $result['cron_active'] = $cron_status_data['is_cron_active'];
-        $result['next_run_display'] = $cron_status_data['next_run_display'];
-        $result['last_run_display'] = $cron_status_data['last_run_display'];
 
         wp_send_json($result);
     }
