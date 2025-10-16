@@ -501,7 +501,7 @@ class Real_Estate_Scraper_Admin
         $post_cron_interval = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly'; // Activated, no sanitization
         $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
-        $post_enable_cron = isset($_POST['enable_cron']) ? intval($_POST['enable_cron']) : 0; // Activated, no sanitization
+        $post_enable_cron = isset($_POST['enable_cron']) ? $_POST['enable_cron'] : 0; // Removed intval() for testing
 
         $db_category_urls = $options['category_urls'] ?? [];
         $db_category_mapping = []; // Commented out
@@ -616,7 +616,7 @@ class Real_Estate_Scraper_Admin
         $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $options['max_ads_per_session'] = isset($_POST['max_ads_per_session']) ? intval($_POST['max_ads_per_session']) : 4;
         $options['default_status'] = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
-        $options['enable_cron'] = isset($_POST['enable_cron']) ? intval($_POST['enable_cron']) : 0; // Activated, no sanitization
+        $options['enable_cron'] = isset($_POST['enable_cron']) ? $_POST['enable_cron'] : 0; // Removed intval() for testing
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 
