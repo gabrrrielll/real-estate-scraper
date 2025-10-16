@@ -83,7 +83,7 @@ class Real_Estate_Scraper_Scraper
             // --- NEW LOGIC: Rotate through categories ---
             error_log('SCRAPER DEBUG - Category URLs before rotation: ' . var_export($this->options['category_urls'], true));
             error_log('RES DEBUG - Starting category rotation...');
-            
+
             // Get valid categories (non-empty URLs)
             $valid_categories = array();
             foreach ($this->options['category_urls'] as $category_key => $url) {
@@ -91,7 +91,7 @@ class Real_Estate_Scraper_Scraper
                     $valid_categories[$category_key] = $url;
                 }
             }
-            
+
             if (empty($valid_categories)) {
                 error_log('RES DEBUG - No valid categories found');
                 return array(
@@ -100,36 +100,36 @@ class Real_Estate_Scraper_Scraper
                     'stats' => $stats
                 );
             }
-            
+
             // Process categories in rotation until global limit is reached
             $category_index = 0;
             $category_keys = array_keys($valid_categories);
-            
+
             while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
                 $category_key = $category_keys[$category_index % count($category_keys)];
                 $url = $valid_categories[$category_key];
-                
+
                 error_log("RES DEBUG - Rotation iteration - Category: {$category_key}, URL: {$url}");
-                
+
                 // Process one property from this category
                 $category_stats = $this->process_category_rotation($category_key, $url, $max_ads_global, $ads_processed_global);
-                
+
                 $stats['total_found'] += $category_stats['found'];
                 $stats['new_added'] += $category_stats['new'];
                 $stats['duplicates_skipped'] += $category_stats['duplicates'];
                 $stats['errors'] += $category_stats['errors'];
-                
+
                 // Update global counter
                 $ads_processed_global += $category_stats['found'];
-                
+
                 // If no properties were found in this category, move to next
                 if ($category_stats['found'] == 0) {
                     error_log("RES DEBUG - No properties found in category {$category_key}, moving to next");
                 }
-                
+
                 // Move to next category
                 $category_index++;
-                
+
                 // If we've gone through all categories and no new properties were added, break
                 if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
                     error_log("RES DEBUG - Completed full rotation with no new properties, stopping");
@@ -533,6 +533,7 @@ class Real_Estate_Scraper_Scraper
             'address' => '',
             'latitude' => '', // Added for latitude
             'longitude' => '', // Added for longitude
+            'phone_number' => '', // NEW: Added for phone number
             'images' => array(),
             'source_url' => $source_url
         );
@@ -608,6 +609,13 @@ class Real_Estate_Scraper_Scraper
         $longitude_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['longitude_xpath']);
         if ($longitude_nodes->length > 0) {
             $property_data['longitude'] = trim($longitude_nodes->item(0)->textContent);
+        }
+
+        // Extract phone number
+        $phone_number = $this->extract_phone_number($xpath);
+        if (!empty($phone_number)) {
+            $property_data['phone_number'] = $phone_number;
+            error_log('RES DEBUG - PHONE NUMBER EXTRACTED: ' . $phone_number);
         }
 
         // Extract images
@@ -705,5 +713,79 @@ class Real_Estate_Scraper_Scraper
             error_log('RES DEBUG - === GEOCODING COMPLETE ===');
             return null;
         }
+    }
+
+    /**
+     * Extract phone number from property page
+     */
+    private function extract_phone_number($xpath)
+    {
+        error_log('RES DEBUG - === EXTRACTING PHONE NUMBER ===');
+        
+        // Common phone number patterns to try
+        $phone_patterns = array(
+            // Romanian phone patterns
+            '//text()[contains(., "07") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "+407") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "072") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "073") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "074") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "075") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "076") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "077") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "078") and string-length(normalize-space(.)) <= 15]',
+            '//text()[contains(., "079") and string-length(normalize-space(.)) <= 15]',
+            // Generic phone patterns
+            '//text()[contains(., "tel:")]',
+            '//a[contains(@href, "tel:")]/@href',
+            '//span[contains(@class, "phone")]',
+            '//div[contains(@class, "phone")]',
+            '//span[contains(text(), "07")]',
+            '//div[contains(text(), "07")]'
+        );
+
+        foreach ($phone_patterns as $pattern) {
+            $nodes = $xpath->query($pattern);
+            if ($nodes->length > 0) {
+                foreach ($nodes as $node) {
+                    $text = trim($node->textContent ?? $node->nodeValue ?? '');
+                    
+                    // Clean and validate phone number
+                    $phone = $this->clean_phone_number($text);
+                    if (!empty($phone)) {
+                        error_log('RES DEBUG - PHONE NUMBER FOUND: ' . $phone);
+                        return $phone;
+                    }
+                }
+            }
+        }
+
+        error_log('RES DEBUG - No phone number found');
+        return '';
+    }
+
+    /**
+     * Clean and validate phone number
+     */
+    private function clean_phone_number($text)
+    {
+        // Remove all non-digit characters except +
+        $cleaned = preg_replace('/[^\d+]/', '', $text);
+        
+        // Romanian phone number patterns
+        if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
+            return '0' . $matches[2]; // Return with 0 prefix
+        }
+        
+        // If it starts with tel:, extract the number
+        if (strpos($text, 'tel:') !== false) {
+            $cleaned = str_replace('tel:', '', $text);
+            $cleaned = preg_replace('/[^\d+]/', '', $cleaned);
+            if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
+                return '0' . $matches[2];
+            }
+        }
+        
+        return '';
     }
 }

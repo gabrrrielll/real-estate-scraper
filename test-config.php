@@ -84,4 +84,3 @@ echo "Can manage options: " . (current_user_can('manage_options') ? 'YES' : 'NO'
 echo "<h2>Test Complete</h2>";
 echo "Check your error logs for the test message above.<br>";
 echo "Delete this file after testing for security.";
-

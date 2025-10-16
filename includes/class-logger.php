@@ -295,8 +295,3 @@ class Real_Estate_Scraper_Logger
         $this->error("Final error after all retries: {$message}");
     }
 }
-
-
-
-
-

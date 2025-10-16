@@ -90,7 +90,7 @@ class Real_Estate_Scraper_Geocoder
 
         // Extract address information
         $address = $this->extract_address_info($data);
-        
+
         error_log('RES DEBUG - Geocoder: Extracted address - ' . json_encode($address, JSON_UNESCAPED_UNICODE));
 
         return $address;
@@ -126,22 +126,22 @@ class Real_Estate_Scraper_Geocoder
 
             // City (try multiple fields)
             $address['city'] = $this->get_address_component($addr, array('city', 'town', 'village', 'municipality'));
-            
+
             // Street
             $address['street'] = $this->get_address_component($addr, array('road', 'street', 'street_name'));
-            
+
             // House number
             $address['house_number'] = $this->get_address_component($addr, array('house_number', 'house'));
-            
+
             // Postal code
             $address['postal_code'] = $this->get_address_component($addr, array('postcode', 'postal_code'));
-            
+
             // Country
             $address['country'] = $this->get_address_component($addr, array('country'));
-            
+
             // County
             $address['county'] = $this->get_address_component($addr, array('county', 'state'));
-            
+
             // Village/Town (for rural areas)
             $address['village'] = $this->get_address_component($addr, array('village'));
             $address['town'] = $this->get_address_component($addr, array('town'));
@@ -171,7 +171,7 @@ class Real_Estate_Scraper_Geocoder
         $coordinate = trim($coordinate);
         // Allow digits, decimal point, and negative sign
         $coordinate = preg_replace('/[^\d.-]/', '', $coordinate);
-        
+
         if (is_numeric($coordinate)) {
             return (string) floatval($coordinate);
         }
@@ -185,7 +185,7 @@ class Real_Estate_Scraper_Geocoder
     {
         error_log('RES DEBUG - Geocoder: Testing with sample coordinates');
         $result = $this->reverse_geocode('45.9432', '24.9668');
-        
+
         if ($result) {
             error_log('RES DEBUG - Geocoder: Test successful');
             return $result;
