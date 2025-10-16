@@ -53,12 +53,12 @@ class Real_Estate_Scraper_Admin
      */
     public function enqueue_jquery($hook)
     {
-        error_log('RES DEBUG - enqueue_jquery called with hook: ' . $hook);
+        // error_log('RES DEBUG - enqueue_jquery called with hook: ' . $hook);
         if (strpos($hook, 'real-estate-scraper') !== false) {
             wp_enqueue_script('jquery');
-            error_log('RES DEBUG - jQuery enqueued for hook: ' . $hook);
+            // error_log('RES DEBUG - jQuery enqueued for hook: ' . $hook);
         } else {
-            error_log('RES DEBUG - jQuery NOT enqueued - hook does not contain real-estate-scraper');
+            // error_log('RES DEBUG - jQuery NOT enqueued - hook does not contain real-estate-scraper');
         }
     }
 

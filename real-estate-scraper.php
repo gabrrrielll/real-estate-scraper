@@ -158,8 +158,8 @@ class Real_Estate_Scraper
 
     public function add_admin_menu()
     {
-        error_log('RES DEBUG - ===== ADD_ADMIN_MENU CALLED =====');
-        error_log('RES DEBUG - Adding admin menu at: ' . current_time('mysql'));
+        // error_log('RES DEBUG - ===== ADD_ADMIN_MENU CALLED =====');
+        // error_log('RES DEBUG - Adding admin menu at: ' . current_time('mysql'));
 
         $hook = add_menu_page(
             __('Real Estate Scraper', 'real-estate-scraper'),
@@ -171,8 +171,8 @@ class Real_Estate_Scraper
             30
         );
 
-        error_log('RES DEBUG - Admin menu added with hook: ' . $hook);
-        error_log('RES DEBUG - Menu page slug: real-estate-scraper');
+        // error_log('RES DEBUG - Admin menu added with hook: ' . $hook);
+        // error_log('RES DEBUG - Menu page slug: real-estate-scraper');
     }
 
     public function ajax_run_scraper()
