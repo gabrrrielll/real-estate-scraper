@@ -84,6 +84,12 @@ class Real_Estate_Scraper_Mapper
      */
     private function set_property_meta($post_id, $property_data)
     {
+        // Prepare coordinates for map location field
+        $map_location = '';
+        if (!empty($property_data['latitude']) && !empty($property_data['longitude'])) {
+            $map_location = $this->clean_coordinate($property_data['latitude']) . ',' . $this->clean_coordinate($property_data['longitude']);
+        }
+
         $meta_fields = array(
             'fave_property_price' => $this->clean_price($property_data['price']),
             'fave_property_size' => $this->clean_size($property_data['size']),
@@ -93,6 +99,7 @@ class Real_Estate_Scraper_Mapper
             'fave_property_map_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
             'fave_property_map_longitude' => $this->clean_coordinate($property_data['longitude']),
+            'fave_property_location' => $map_location, // NEW: Add coordinates for map display
             'fave_property_source_url' => $property_data['source_url'],
             'fave_private_note' => 'Vezi anuntul original aici: @' . $property_data['source_url']
         );
