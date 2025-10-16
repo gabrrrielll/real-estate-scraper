@@ -745,7 +745,9 @@ class Real_Estate_Scraper_Scraper
         error_log('RES DEBUG - Property source URL: ' . $source_url);
 
         // Check which category URL this property belongs to
+        error_log('RES DEBUG - Available category URLs: ' . var_export($this->options['category_urls'], true));
         foreach ($this->options['category_urls'] as $category_key => $category_url) {
+            error_log('RES DEBUG - Checking if source URL contains: ' . $category_url);
             if (strpos($source_url, $category_url) !== false) {
                 error_log('RES DEBUG - Property belongs to category: ' . $category_key);
                 return $category_key;
