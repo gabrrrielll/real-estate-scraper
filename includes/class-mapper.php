@@ -102,7 +102,7 @@ class Real_Estate_Scraper_Mapper
             'fave_property_location' => $map_location, // NEW: Add coordinates for map display
             'fave_property_source_url' => $property_data['source_url'],
             'fave_private_note' => 'Vezi anuntul original aici: @' . $property_data['source_url'],
-            'fave_telefon-proprietar' => $this->clean_phone_number($property_data['phone_number'] ?? '') // NEW: Add phone number
+            'fave_telefon-proprietar' => trim($property_data['phone_number'] ?? '') // NEW: Add phone number
         );
 
         foreach ($meta_fields as $key => $value) {
@@ -548,33 +548,5 @@ class Real_Estate_Scraper_Mapper
         return $name;
     }
 
-    /**
-     * Clean phone number for saving
-     */
-    private function clean_phone_number($phone)
-    {
-        if (empty($phone)) {
-            return '';
-        }
-
-        // Remove all non-digit characters except +
-        $cleaned = preg_replace('/[^\d+]/', '', $phone);
-
-        // Romanian phone number patterns
-        if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
-            return '0' . $matches[2]; // Return with 0 prefix
-        }
-
-        // If it starts with tel:, extract the number
-        if (strpos($phone, 'tel:') !== false) {
-            $cleaned = str_replace('tel:', '', $phone);
-            $cleaned = preg_replace('/[^\d+]/', '', $cleaned);
-            if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
-                return '0' . $matches[2];
-            }
-        }
-
-        return '';
-    }
 
 }

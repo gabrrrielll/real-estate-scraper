@@ -611,11 +611,14 @@ class Real_Estate_Scraper_Scraper
             $property_data['longitude'] = trim($longitude_nodes->item(0)->textContent);
         }
 
-        // Extract phone number
-        $phone_number = $this->extract_phone_number($xpath);
-        if (!empty($phone_number)) {
+        // Extract phone number using existing XPath from constants.php
+        $phone_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['phone_xpath']);
+        if ($phone_nodes->length > 0) {
+            $phone_number = trim($phone_nodes->item(0)->textContent);
             $property_data['phone_number'] = $phone_number;
             error_log('RES DEBUG - PHONE NUMBER EXTRACTED: ' . $phone_number);
+        } else {
+            error_log('RES DEBUG - No phone number found using XPath: ' . RES_SCRAPER_CONFIG['property_data']['phone_xpath']);
         }
 
         // Extract images
@@ -715,79 +718,4 @@ class Real_Estate_Scraper_Scraper
         }
     }
 
-    /**
-     * Extract phone number from property page
-     */
-    private function extract_phone_number($xpath)
-    {
-        error_log('RES DEBUG - === EXTRACTING PHONE NUMBER ===');
-
-        // Common phone number patterns to try
-        $phone_patterns = array(
-            // First try the existing XPath from constants.php
-            RES_SCRAPER_CONFIG['property_data']['phone_xpath'],
-            // Romanian phone patterns
-            '//text()[contains(., "07") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "+407") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "072") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "073") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "074") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "075") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "076") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "077") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "078") and string-length(normalize-space(.)) <= 15]',
-            '//text()[contains(., "079") and string-length(normalize-space(.)) <= 15]',
-            // Generic phone patterns
-            '//text()[contains(., "tel:")]',
-            '//a[contains(@href, "tel:")]/@href',
-            '//span[contains(@class, "phone")]',
-            '//div[contains(@class, "phone")]',
-            '//span[contains(text(), "07")]',
-            '//div[contains(text(), "07")]'
-        );
-
-        foreach ($phone_patterns as $pattern) {
-            $nodes = $xpath->query($pattern);
-            if ($nodes->length > 0) {
-                foreach ($nodes as $node) {
-                    $text = trim($node->textContent ?? $node->nodeValue ?? '');
-
-                    // Clean and validate phone number
-                    $phone = $this->clean_phone_number($text);
-                    if (!empty($phone)) {
-                        error_log('RES DEBUG - PHONE NUMBER FOUND: ' . $phone);
-                        return $phone;
-                    }
-                }
-            }
-        }
-
-        error_log('RES DEBUG - No phone number found');
-        return '';
-    }
-
-    /**
-     * Clean and validate phone number
-     */
-    private function clean_phone_number($text)
-    {
-        // Remove all non-digit characters except +
-        $cleaned = preg_replace('/[^\d+]/', '', $text);
-
-        // Romanian phone number patterns
-        if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
-            return '0' . $matches[2]; // Return with 0 prefix
-        }
-
-        // If it starts with tel:, extract the number
-        if (strpos($text, 'tel:') !== false) {
-            $cleaned = str_replace('tel:', '', $text);
-            $cleaned = preg_replace('/[^\d+]/', '', $cleaned);
-            if (preg_match('/^(\+?40)?(7[0-9]{8})$/', $cleaned, $matches)) {
-                return '0' . $matches[2];
-            }
-        }
-
-        return '';
-    }
 }
