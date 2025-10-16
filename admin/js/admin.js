@@ -194,7 +194,7 @@ function toggleCron() {
         success: function (response) {
             if (response.success) {
                 showMessage('success', response.message);
-                
+
                 // Update button text based on cron status
                 if (response.cron_active) {
                     toggleText.text('Stop Cron');
@@ -203,7 +203,7 @@ function toggleCron() {
                     toggleText.text('Start Cron');
                     button.removeClass('button-danger').addClass('button-secondary');
                 }
-                
+
                 // Refresh page to update status
                 setTimeout(function() {
                     location.reload();
@@ -211,14 +211,16 @@ function toggleCron() {
             } else {
                 showMessage('error', response.message);
                 toggleText.text(originalText);
+                button.removeClass('res-button-loading').prop('disabled', false); // Only reset on error
             }
         },
         error: function (xhr, status, error) {
             showMessage('error', 'AJAX Error: ' + error);
             toggleText.text(originalText);
+            button.removeClass('res-button-loading').prop('disabled', false); // Reset on error
         },
         complete: function () {
-            button.removeClass('res-button-loading').prop('disabled', false);
+            // Removed button reset from here. Page reload will handle it on success.
         }
     });
 }
