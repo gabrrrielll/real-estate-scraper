@@ -101,40 +101,23 @@ class Real_Estate_Scraper_Scraper
                 );
             }
 
-            // Process categories in rotation until global limit is reached
-            $category_index = 0;
-            $category_keys = array_keys($valid_categories);
+            // NEW LOGIC: Determine next category based on last added property
+            $next_category = $this->get_next_category_for_rotation();
+            error_log("RES DEBUG - Next category to process: {$next_category}");
 
-            while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
-                $category_key = $category_keys[$category_index % count($category_keys)];
-                $url = $valid_categories[$category_key];
-
-                error_log("RES DEBUG - Rotation iteration - Category: {$category_key}, URL: {$url}");
+            if (!empty($next_category) && isset($valid_categories[$next_category])) {
+                $url = $valid_categories[$next_category];
+                error_log("RES DEBUG - Processing category: {$next_category}, URL: {$url}");
 
                 // Process one property from this category
-                $category_stats = $this->process_category_rotation($category_key, $url, $max_ads_global, $ads_processed_global);
+                $category_stats = $this->process_category_rotation($next_category, $url, $max_ads_global, $ads_processed_global);
 
                 $stats['total_found'] += $category_stats['found'];
                 $stats['new_added'] += $category_stats['new'];
                 $stats['duplicates_skipped'] += $category_stats['duplicates'];
                 $stats['errors'] += $category_stats['errors'];
-
-                // Update global counter
-                $ads_processed_global += $category_stats['found'];
-
-                // If no properties were found in this category, move to next
-                if ($category_stats['found'] == 0) {
-                    error_log("RES DEBUG - No properties found in category {$category_key}, moving to next");
-                }
-
-                // Move to next category
-                $category_index++;
-
-                // If we've gone through all categories and no new properties were added, break
-                if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
-                    error_log("RES DEBUG - Completed full rotation with no new properties, stopping");
-                    break;
-                }
+            } else {
+                error_log("RES DEBUG - No valid next category found or category not in valid categories");
             }
             // }
             // --- END TEMPORARY TEST ---
@@ -716,6 +699,102 @@ class Real_Estate_Scraper_Scraper
             error_log('RES DEBUG - === GEOCODING COMPLETE ===');
             return null;
         }
+    }
+
+    /**
+     * Get next category for rotation based on last added property
+     */
+    private function get_next_category_for_rotation()
+    {
+        error_log('RES DEBUG - === DETERMINING NEXT CATEGORY FOR ROTATION ===');
+        
+        // Define category order
+        $category_order = array('apartamente', 'garsoniere', 'case_vile', 'spatii_comerciale');
+        
+        // Get last added property
+        $last_property = $this->get_last_added_property();
+        
+        if (!$last_property) {
+            error_log('RES DEBUG - No properties found, starting with first category: apartamente');
+            return 'apartamente';
+        }
+        
+        // Get category of last property
+        $last_category = $this->get_property_category($last_property);
+        
+        if (!$last_category) {
+            error_log('RES DEBUG - Could not determine category of last property, starting with first category: apartamente');
+            return 'apartamente';
+        }
+        
+        error_log('RES DEBUG - Last property category: ' . $last_category);
+        
+        // Find next category in rotation
+        $current_index = array_search($last_category, $category_order);
+        if ($current_index === false) {
+            error_log('RES DEBUG - Last category not found in order, starting with first category: apartamente');
+            return 'apartamente';
+        }
+        
+        $next_index = ($current_index + 1) % count($category_order);
+        $next_category = $category_order[$next_index];
+        
+        error_log('RES DEBUG - Next category in rotation: ' . $next_category);
+        return $next_category;
+    }
+
+    /**
+     * Get last added property from database
+     */
+    private function get_last_added_property()
+    {
+        $last_property = get_posts(array(
+            'post_type' => 'property',
+            'post_status' => array('publish', 'draft', 'private'),
+            'posts_per_page' => 1,
+            'orderby' => 'date',
+            'order' => 'DESC',
+            'meta_query' => array(
+                array(
+                    'key' => 'fave_property_source_url',
+                    'compare' => 'EXISTS'
+                )
+            )
+        ));
+        
+        if (!empty($last_property)) {
+            error_log('RES DEBUG - Last property found: ID ' . $last_property[0]->ID . ', Title: ' . $last_property[0]->post_title);
+            return $last_property[0];
+        }
+        
+        error_log('RES DEBUG - No properties found in database');
+        return null;
+    }
+
+    /**
+     * Get category of a property based on its source URL
+     */
+    private function get_property_category($property)
+    {
+        $source_url = get_post_meta($property->ID, 'fave_property_source_url', true);
+        
+        if (empty($source_url)) {
+            error_log('RES DEBUG - Property has no source URL');
+            return null;
+        }
+        
+        error_log('RES DEBUG - Property source URL: ' . $source_url);
+        
+        // Check which category URL this property belongs to
+        foreach ($this->options['category_urls'] as $category_key => $category_url) {
+            if (strpos($source_url, $category_url) !== false) {
+                error_log('RES DEBUG - Property belongs to category: ' . $category_key);
+                return $category_key;
+            }
+        }
+        
+        error_log('RES DEBUG - Could not determine property category from URL');
+        return null;
     }
 
 }
