@@ -104,7 +104,7 @@ class Real_Estate_Scraper_Scraper
             // NEW LOGIC: Process categories in rotation until max_ads_per_session limit is reached
             $category_index = 0;
             $category_keys = array_keys($valid_categories);
-            
+
             while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
                 // Determine next category based on last added property (only for first iteration)
                 if ($category_index == 0) {
@@ -115,7 +115,7 @@ class Real_Estate_Scraper_Scraper
                     $next_category = $category_keys[$category_index % count($category_keys)];
                     error_log("RES DEBUG - Continuing rotation with category: {$next_category}");
                 }
-                
+
                 if (!empty($next_category) && isset($valid_categories[$next_category])) {
                     $url = $valid_categories[$next_category];
                     error_log("RES DEBUG - Processing category: {$next_category}, URL: {$url}");
@@ -130,7 +130,7 @@ class Real_Estate_Scraper_Scraper
 
                     // Update global counter
                     $ads_processed_global += $category_stats['found'];
-                    
+
                     // If no properties were found in this category, move to next
                     if ($category_stats['found'] == 0) {
                         error_log("RES DEBUG - No properties found in category {$next_category}, moving to next");
@@ -139,10 +139,10 @@ class Real_Estate_Scraper_Scraper
                     error_log("RES DEBUG - No valid next category found or category not in valid categories");
                     break;
                 }
-                
+
                 // Move to next category
                 $category_index++;
-                
+
                 // If we've gone through all categories and no new properties were added, break
                 if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
                     error_log("RES DEBUG - Completed full rotation with no new properties, stopping");

@@ -570,7 +570,6 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION CALLED =====');
         error_log('RES DEBUG - Function entry time: ' . current_time('mysql'));
         error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
-        error_log('RES DEBUG - User capabilities: ' . print_r(wp_get_current_user()->allcaps, true));
 
         // Log all POST data in detail
         error_log('RES DEBUG - POST data received:');
