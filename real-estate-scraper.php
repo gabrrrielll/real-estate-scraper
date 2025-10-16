@@ -292,19 +292,14 @@ class Real_Estate_Scraper
             // Start cron
             $interval = $options['cron_interval'] ?? 'hourly';
             $cron->schedule_cron($interval);
-            $result = array(
-                'success' => true,
-                'message' => __('Cron job started successfully.', 'real-estate-scraper'),
-                'cron_active' => true
-            );
             error_log('RES DEBUG - Cron job started with interval: ' . $interval);
         }
 
-        $cron_times = $this->get_cron_run_times();
+        $cron_status_data = $this->get_cron_run_times(); // Re-use the existing helper
 
-        $result['cron_active'] = $cron_times['is_cron_active'];
-        $result['next_run_display'] = $cron_times['next_run_display'];
-        $result['last_run_display'] = $cron_times['last_run_display'];
+        $result['cron_active'] = $cron_status_data['is_cron_active'];
+        $result['next_run_display'] = $cron_status_data['next_run_display'];
+        $result['last_run_display'] = $cron_status_data['last_run_display'];
 
         wp_send_json($result);
     }

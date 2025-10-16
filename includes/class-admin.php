@@ -92,6 +92,9 @@ class Real_Estate_Scraper_Admin
         // JS Configuration
         error_log('RES DEBUG - Creating JS configuration');
         echo '<script type="text/javascript">';
+
+        $cron_status_data = $this->_get_cron_status_data();
+
         echo 'window.realEstateScraper = ' . json_encode(array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('res_nonce'),
@@ -99,7 +102,19 @@ class Real_Estate_Scraper_Admin
                 'running' => __('Running...', 'real-estate-scraper'),
                 'success' => __('Success!', 'real-estate-scraper'),
                 'error' => __('Error!', 'real-estate-scraper'),
-                'confirm' => __('Are you sure?', 'real-estate-scraper')
+                'confirm' => __('Are you sure?', 'real-estate-scraper'),
+                'stopCron' => __('Stop Cron', 'real-estate-scraper'),
+                'startCron' => __('Start Cron', 'real-estate-scraper'),
+                'processing' => __('Processing...', 'real-estate-scraper'),
+                'nextRun' => __('Next Run:', 'real-estate-scraper'),
+                'lastRun' => __('Last Run:', 'real-estate-scraper')
+            ),
+            'initial_cron_status' => array(
+                'cron_active' => $cron_status_data['is_cron_active'],
+                'button_text' => $cron_status_data['button_text'],
+                'button_class' => $cron_status_data['button_class'],
+                'next_run_display' => $cron_status_data['next_run_display'],
+                'last_run_display' => $cron_status_data['last_run_display']
             )
         )) . ';';
         echo '</script>';
@@ -122,6 +137,26 @@ class Real_Estate_Scraper_Admin
         }
 
         error_log('RES DEBUG - ===== ADD_INLINE_ASSETS COMPLETED =====');
+    }
+
+    /**
+     * Returns formatted next/last cron run times and active status.
+     */
+    private function _get_cron_status_data()
+    {
+        $next_run_timestamp = wp_next_scheduled('real_estate_scraper_cron');
+        $last_run_timestamp = get_option('real_estate_scraper_last_run', false);
+
+        $next_run_display = $next_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $next_run_timestamp) : __('Not scheduled', 'real-estate-scraper');
+        $last_run_display = $last_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_run_timestamp) : __('Never', 'real-estate-scraper');
+
+        return [
+            'next_run_display' => $next_run_display,
+            'last_run_display' => $last_run_display,
+            'is_cron_active' => (bool) $next_run_timestamp,
+            'button_text' => (bool) $next_run_timestamp ? __('Stop Cron', 'real-estate-scraper') : __('Start Cron', 'real-estate-scraper'),
+            'button_class' => (bool) $next_run_timestamp ? 'button-danger' : 'button-secondary'
+        ];
     }
 
     /**
