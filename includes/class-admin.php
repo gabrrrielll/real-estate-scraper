@@ -78,8 +78,8 @@ class Real_Estate_Scraper_Admin
             );
 
             // Get cron info for initial state
-            $cron_times = Real_Estate_Scraper::get_instance()->get_cron_run_times();
-
+            $cron_info = $this->get_formatted_cron_times();
+            
             wp_localize_script(
                 'real-estate-scraper-admin-script',
                 'realEstateScraper',
@@ -95,11 +95,11 @@ class Real_Estate_Scraper_Admin
                         'processing' => __('Processing...', 'real-estate-scraper')
                     ),
                     'initial_cron_status' => array(
-                        'cron_active' => $cron_times['is_cron_active'],
-                        'button_text' => $cron_times['is_cron_active'] ? __('Stop Cron', 'real-estate-scraper') : __('Start Cron', 'real-estate-scraper'),
-                        'button_class' => $cron_times['is_cron_active'] ? 'button-danger' : 'button-secondary',
-                        'next_run_display' => $cron_times['next_run_display'],
-                        'last_run_display' => $cron_times['last_run_display']
+                        'cron_active' => $cron_info['is_cron_active'],
+                        'button_text' => $cron_info['is_cron_active'] ? __('Stop Cron', 'real-estate-scraper') : __('Start Cron', 'real-estate-scraper'),
+                        'button_class' => $cron_info['is_cron_active'] ? 'button-danger' : 'button-secondary',
+                        'next_run_display' => $cron_info['next_run_display'],
+                        'last_run_display' => $cron_info['last_run_display']
                     )
                 )
             );
@@ -108,6 +108,25 @@ class Real_Estate_Scraper_Admin
         } else {
             error_log('RES DEBUG - Scripts/styles NOT enqueued - hook does not contain real-estate-scraper');
         }
+    }
+
+    /**
+     * Returns formatted next/last cron run times.
+     */
+    private function get_formatted_cron_times()
+    {
+        $cron = Real_Estate_Scraper_Cron::get_instance();
+        $next_run_timestamp = wp_next_scheduled('real_estate_scraper_cron');
+        $last_run_timestamp = get_option('real_estate_scraper_last_run', false);
+
+        $next_run_display = $next_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $next_run_timestamp) : __('Not scheduled', 'real-estate-scraper');
+        $last_run_display = $last_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_run_timestamp) : __('Never', 'real-estate-scraper');
+
+        return [
+            'next_run_display' => $next_run_display,
+            'last_run_display' => $last_run_display,
+            'is_cron_active' => (bool) $next_run_timestamp
+        ];
     }
 
     /**
