@@ -221,7 +221,7 @@ function toggleCron() {
                     toggleText.text(window.realEstateScraper.strings.startCron);
                     button.removeClass('button-danger').addClass('button-secondary');
                 }
-
+                
                 // Update Next Run and Last Run times
                 $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (response.next_run_display || 'N/A'));
                 $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (response.last_run_display || 'N/A'));
@@ -238,8 +238,7 @@ function toggleCron() {
             button.removeClass('res-button-loading').prop('disabled', false); // Reset on error
         },
         complete: function () {
-            // Removed button reset from here. Page reload will handle it on success.
-            // The server response now contains updated cron times to set manually.
+            // Removed button reset from here. The server response now contains updated cron times to set manually.
         }
     });
 }
