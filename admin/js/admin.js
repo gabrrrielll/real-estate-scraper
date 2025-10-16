@@ -4,28 +4,10 @@ console.log('RES DEBUG - JavaScript loaded');
 let isRunning = false;
 let logInterval = null;
 
-jQuery(document).ready(function($) {
-    console.log('RES DEBUG - Initializing admin JS');
-    // Set initial cron button state based on localized data
-    const toggleButton = $('#toggle-cron');
-    const toggleText = $('#cron-toggle-text');
-    const initialStatus = window.realEstateScraper.initial_cron_status;
-
-    toggleText.text(initialStatus.button_text);
-    toggleButton.removeClass('button-secondary button-danger').addClass(initialStatus.button_class);
-    $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (initialStatus.next_run_display || 'N/A'));
-    $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (initialStatus.last_run_display || 'N/A'));
-
-    bindEvents();
-    refreshLogs();
-
-    // Auto-refresh logs every 30 seconds when not running
-    setInterval(function () {
-        if (!isRunning) {
-            refreshLogs();
-        }
-    }, 30000);
-});
+// Initialize immediately since we're already in jQuery ready
+console.log('RES DEBUG - Initializing admin JS');
+bindEvents();
+refreshLogs();
 
 function bindEvents() {
     // Run scraper button
@@ -212,33 +194,31 @@ function toggleCron() {
         success: function (response) {
             if (response.success) {
                 showMessage('success', response.message);
-
+                
                 // Update button text based on cron status
                 if (response.cron_active) {
-                    toggleText.text(window.realEstateScraper.strings.stopCron);
+                    toggleText.text('Stop Cron');
                     button.removeClass('button-secondary').addClass('button-danger');
                 } else {
-                    toggleText.text(window.realEstateScraper.strings.startCron);
+                    toggleText.text('Start Cron');
                     button.removeClass('button-danger').addClass('button-secondary');
                 }
                 
-                // Update Next Run and Last Run times
-                $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (response.next_run_display || 'N/A'));
-                $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (response.last_run_display || 'N/A'));
-
+                // Refresh page to update status
+                setTimeout(function() {
+                    location.reload();
+                }, 2000);
             } else {
                 showMessage('error', response.message);
                 toggleText.text(originalText);
-                button.removeClass('res-button-loading').prop('disabled', false); // Only reset on error
             }
         },
         error: function (xhr, status, error) {
             showMessage('error', 'AJAX Error: ' + error);
             toggleText.text(originalText);
-            button.removeClass('res-button-loading').prop('disabled', false); // Reset on error
         },
         complete: function () {
-            // Removed button reset from here. Page reload will handle it on success.
+            button.removeClass('res-button-loading').prop('disabled', false);
         }
     });
 }
@@ -326,3 +306,10 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
+
+// Auto-refresh logs every 30 seconds when not running
+setInterval(function () {
+    if (!isRunning) {
+        refreshLogs();
+    }
+}, 30000);
