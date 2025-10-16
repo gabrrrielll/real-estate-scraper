@@ -80,30 +80,61 @@ class Real_Estate_Scraper_Scraper
             //         $stats['errors'] = 1;
             //     }
             // } else {
-            // --- ORIGINAL LOGIC: Process each category ---
-            error_log('SCRAPER DEBUG - Category URLs before loop: ' . var_export($this->options['category_urls'], true));
-            error_log('RES DEBUG - Starting category loop...');
+            // --- NEW LOGIC: Rotate through categories ---
+            error_log('SCRAPER DEBUG - Category URLs before rotation: ' . var_export($this->options['category_urls'], true));
+            error_log('RES DEBUG - Starting category rotation...');
+            
+            // Get valid categories (non-empty URLs)
+            $valid_categories = array();
             foreach ($this->options['category_urls'] as $category_key => $url) {
-                error_log('RES DEBUG - Loop iteration - Category: ' . $category_key . ', URL: ' . $url);
-                if (empty($url)) {
-                    continue;
+                if (!empty($url)) {
+                    $valid_categories[$category_key] = $url;
                 }
-
-                // Check global limit before processing category
-                if ($max_ads_global > 0 && $ads_processed_global >= $max_ads_global) {
-                    error_log("RES DEBUG - Global limit reached ({$max_ads_global} ads processed). Skipping remaining categories.");
-                    break;
-                }
-
-                $category_stats = $this->process_category($category_key, $url, $max_ads_global, $ads_processed_global);
-
+            }
+            
+            if (empty($valid_categories)) {
+                error_log('RES DEBUG - No valid categories found');
+                return array(
+                    'success' => false,
+                    'message' => __('No valid category URLs configured.', 'real-estate-scraper'),
+                    'stats' => $stats
+                );
+            }
+            
+            // Process categories in rotation until global limit is reached
+            $category_index = 0;
+            $category_keys = array_keys($valid_categories);
+            
+            while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
+                $category_key = $category_keys[$category_index % count($category_keys)];
+                $url = $valid_categories[$category_key];
+                
+                error_log("RES DEBUG - Rotation iteration - Category: {$category_key}, URL: {$url}");
+                
+                // Process one property from this category
+                $category_stats = $this->process_category_rotation($category_key, $url, $max_ads_global, $ads_processed_global);
+                
                 $stats['total_found'] += $category_stats['found'];
                 $stats['new_added'] += $category_stats['new'];
                 $stats['duplicates_skipped'] += $category_stats['duplicates'];
                 $stats['errors'] += $category_stats['errors'];
-
-                // Update global counter with all processed properties (new + duplicates)
+                
+                // Update global counter
                 $ads_processed_global += $category_stats['found'];
+                
+                // If no properties were found in this category, move to next
+                if ($category_stats['found'] == 0) {
+                    error_log("RES DEBUG - No properties found in category {$category_key}, moving to next");
+                }
+                
+                // Move to next category
+                $category_index++;
+                
+                // If we've gone through all categories and no new properties were added, break
+                if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
+                    error_log("RES DEBUG - Completed full rotation with no new properties, stopping");
+                    break;
+                }
             }
             // }
             // --- END TEMPORARY TEST ---
@@ -131,7 +162,60 @@ class Real_Estate_Scraper_Scraper
     }
 
     /**
-     * Process a single category
+     * Process one property from a category (for rotation)
+     */
+    private function process_category_rotation($category_key, $url, $max_ads_global = 0, $ads_processed_global = 0)
+    {
+        error_log("RES DEBUG - process_category_rotation() called for: {$category_key}, URL: {$url}");
+        error_log("--- Processing one property from category: {$category_key} ---");
+
+        $stats = array(
+            'found' => 0,
+            'new' => 0,
+            'duplicates' => 0,
+            'errors' => 0
+        );
+
+        try {
+            // Get property URLs from category page
+            $property_urls = $this->get_property_urls_from_category($url);
+            error_log('RES DEBUG - get_property_urls_from_category returned: ' . count($property_urls) . ' URLs');
+
+            if (empty($property_urls)) {
+                error_log("RES DEBUG - No properties found in category {$category_key}");
+                return $stats;
+            }
+
+            // Process only the first property from this category
+            $property_url = $property_urls[0];
+            error_log("RES DEBUG - Processing first property from category {$category_key}: {$property_url}");
+
+            $result = $this->process_property($property_url, $category_key);
+
+            if ($result['success']) {
+                $stats['found'] = 1;
+                if ($result['is_new']) {
+                    $stats['new'] = 1;
+                    error_log("RES DEBUG - New property added from category {$category_key}");
+                } else {
+                    $stats['duplicates'] = 1;
+                    error_log("RES DEBUG - Duplicate property found in category {$category_key}");
+                }
+            } else {
+                $stats['errors'] = 1;
+                error_log("RES DEBUG - Error processing property from category {$category_key}: " . $result['message']);
+            }
+
+        } catch (Exception $e) {
+            $this->logger->error("Error processing category {$category_key}: " . $e->getMessage());
+            $stats['errors'] = 1;
+        }
+
+        return $stats;
+    }
+
+    /**
+     * Process a single category (original method - kept for compatibility)
      */
     private function process_category($category_key, $url, $max_ads_global = 0, $ads_processed_global = 0)
     {
