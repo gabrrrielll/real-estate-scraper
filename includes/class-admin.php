@@ -653,14 +653,22 @@ class Real_Estate_Scraper_Admin
         error_log('RES DEBUG - Saved options match what we tried to save: ' . ($options_match ? 'YES' : 'NO'));
 
         if ($options_match) {
-            error_log('RES DEBUG - Settings updated successfully, updating cron schedule...');
-            // Update cron schedule (now active)
+            error_log('RES DEBUG - Settings updated successfully, managing cron...');
+            // Manage cron based on enable_cron setting
             try {
                 $cron = Real_Estate_Scraper_Cron::get_instance();
-                $cron->update_cron_interval($options['cron_interval']);
-                error_log('RES DEBUG - Cron schedule updated');
+                
+                if ($options['enable_cron'] == 1) {
+                    // Cron is enabled, schedule/update it
+                    $cron->schedule_cron($options['cron_interval']);
+                    error_log('RES DEBUG - Cron enabled and scheduled with interval: ' . $options['cron_interval']);
+                } else {
+                    // Cron is disabled, clear it
+                    $cron->clear_cron();
+                    error_log('RES DEBUG - Cron disabled and cleared');
+                }
             } catch (Exception $e) {
-                error_log('RES DEBUG - Error updating cron: ' . $e->getMessage());
+                error_log('RES DEBUG - Error managing cron: ' . $e->getMessage());
             }
 
             // No echo here, redirect happens in handle_save_settings

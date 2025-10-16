@@ -99,18 +99,7 @@ class Real_Estate_Scraper
         error_log('RES DEBUG - Initializing components');
         Real_Estate_Scraper_Logger::get_instance();
         Real_Estate_Scraper_Admin::get_instance();
-        
-        // Get options to check cron status
-        $options = get_option('real_estate_scraper_options', array());
-        $cron_enabled = ($options['enable_cron'] ?? 1) == 1;
-
-        $cron_instance = Real_Estate_Scraper_Cron::get_instance();
-
-        if ($cron_enabled) {
-            $cron_instance->schedule_cron();
-        } else {
-            $cron_instance->clear_cron();
-        }
+        Real_Estate_Scraper_Cron::get_instance();
 
         error_log('RES DEBUG - All components initialized');
     }
@@ -153,7 +142,7 @@ class Real_Estate_Scraper
         add_option('real_estate_scraper_options', $default_options);
 
         // Schedule cron only if enabled
-        if ( ($default_options['enable_cron'] ?? 1) == 1 ) {
+        if (($default_options['enable_cron'] ?? 1) == 1) {
             Real_Estate_Scraper_Cron::get_instance()->schedule_cron();
         }
     }
