@@ -275,10 +275,10 @@ class Real_Estate_Scraper
 
         $cron = Real_Estate_Scraper_Cron::get_instance();
         $options = get_option('real_estate_scraper_options', array());
-        
+
         // Check if cron is currently active
         $is_active = wp_next_scheduled('real_estate_scraper_cron');
-        
+
         if ($is_active) {
             // Stop cron
             wp_clear_scheduled_hook('real_estate_scraper_cron');
@@ -292,15 +292,34 @@ class Real_Estate_Scraper
             // Start cron
             $interval = $options['cron_interval'] ?? 'hourly';
             $cron->schedule_cron($interval);
-            $result = array(
-                'success' => true,
-                'message' => __('Cron job started successfully.', 'real-estate-scraper'),
-                'cron_active' => true
-            );
             error_log('RES DEBUG - Cron job started with interval: ' . $interval);
         }
 
+        $cron_times = $this->get_cron_run_times();
+
+        $result['cron_active'] = $cron_times['is_cron_active'];
+        $result['next_run_display'] = $cron_times['next_run_display'];
+        $result['last_run_display'] = $cron_times['last_run_display'];
+
         wp_send_json($result);
+    }
+
+    /**
+     * Returns formatted next/last cron run times.
+     */
+    private function get_cron_run_times()
+    {
+        $next_run_timestamp = wp_next_scheduled('real_estate_scraper_cron');
+        $last_run_timestamp = get_option('real_estate_scraper_last_run', false);
+
+        $next_run_display = $next_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $next_run_timestamp) : __('Not scheduled', 'real-estate-scraper');
+        $last_run_display = $last_run_timestamp ? date_i18n(get_option('date_format') . ' ' . get_option('time_format'), $last_run_timestamp) : __('Never', 'real-estate-scraper');
+
+        return [
+            'next_run_display' => $next_run_display,
+            'last_run_display' => $last_run_display,
+            'is_cron_active' => (bool) $next_run_timestamp
+        ];
     }
 }
 

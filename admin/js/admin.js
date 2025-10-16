@@ -4,10 +4,28 @@ console.log('RES DEBUG - JavaScript loaded');
 let isRunning = false;
 let logInterval = null;
 
-// Initialize immediately since we're already in jQuery ready
-console.log('RES DEBUG - Initializing admin JS');
-bindEvents();
-refreshLogs();
+jQuery(document).ready(function($) {
+    console.log('RES DEBUG - Initializing admin JS');
+    // Set initial cron button state based on localized data
+    const toggleButton = $('#toggle-cron');
+    const toggleText = $('#cron-toggle-text');
+    const initialStatus = window.realEstateScraper.initial_cron_status;
+
+    toggleText.text(initialStatus.button_text);
+    toggleButton.removeClass('button-secondary button-danger').addClass(initialStatus.button_class);
+    $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (initialStatus.next_run_display || 'N/A'));
+    $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (initialStatus.last_run_display || 'N/A'));
+
+    bindEvents();
+    refreshLogs();
+
+    // Auto-refresh logs every 30 seconds when not running
+    setInterval(function () {
+        if (!isRunning) {
+            refreshLogs();
+        }
+    }, 30000);
+});
 
 function bindEvents() {
     // Run scraper button
@@ -197,17 +215,17 @@ function toggleCron() {
 
                 // Update button text based on cron status
                 if (response.cron_active) {
-                    toggleText.text('Stop Cron');
+                    toggleText.text(window.realEstateScraper.strings.stopCron);
                     button.removeClass('button-secondary').addClass('button-danger');
                 } else {
-                    toggleText.text('Start Cron');
+                    toggleText.text(window.realEstateScraper.strings.startCron);
                     button.removeClass('button-danger').addClass('button-secondary');
                 }
+                
+                // Update Next Run and Last Run times
+                $('p:contains(\'Next Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.nextRun + '</strong> ' + (response.next_run_display || 'N/A'));
+                $('p:contains(\'Last Run\') strong').parent().html('<strong>' + window.realEstateScraper.strings.lastRun + '</strong> ' + (response.last_run_display || 'N/A'));
 
-                // Refresh page to update status
-                setTimeout(function() {
-                    location.reload();
-                }, 2000);
             } else {
                 showMessage('error', response.message);
                 toggleText.text(originalText);
@@ -308,10 +326,3 @@ function escapeHtml(text) {
     div.textContent = text;
     return div.innerHTML;
 }
-
-// Auto-refresh logs every 30 seconds when not running
-setInterval(function () {
-    if (!isRunning) {
-        refreshLogs();
-    }
-}, 30000);
