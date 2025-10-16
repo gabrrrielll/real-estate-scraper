@@ -731,30 +731,31 @@ class Real_Estate_Scraper_Scraper
     }
 
     /**
-     * Get category of a property based on its source URL
+     * Get category of a property based on its property_type taxonomy
      */
     private function get_property_category($property)
     {
-        $source_url = get_post_meta($property->ID, 'fave_property_source_url', true);
-
-        if (empty($source_url)) {
-            error_log('RES DEBUG - Property has no source URL');
+        // Get property type terms for this property
+        $property_types = wp_get_post_terms($property->ID, 'property_type');
+        
+        if (is_wp_error($property_types) || empty($property_types)) {
+            error_log('RES DEBUG - Property has no property_type terms');
             return null;
         }
-
-        error_log('RES DEBUG - Property source URL: ' . $source_url);
-
-        // Check which category URL this property belongs to
-        error_log('RES DEBUG - Available category URLs: ' . var_export($this->options['category_urls'], true));
-        foreach ($this->options['category_urls'] as $category_key => $category_url) {
-            error_log('RES DEBUG - Checking if source URL contains: ' . $category_url);
-            if (strpos($source_url, $category_url) !== false) {
-                error_log('RES DEBUG - Property belongs to category: ' . $category_key);
+        
+        $property_type_id = $property_types[0]->term_id;
+        error_log('RES DEBUG - Property type ID: ' . $property_type_id);
+        
+        // Map property type ID to category using category_mapping
+        foreach ($this->options['category_mapping'] as $category_key => $type_id) {
+            if ($type_id == $property_type_id) {
+                error_log('RES DEBUG - Property belongs to category: ' . $category_key . ' (type ID: ' . $type_id . ')');
                 return $category_key;
             }
         }
-
-        error_log('RES DEBUG - Could not determine property category from URL');
+        
+        error_log('RES DEBUG - Could not map property type ID ' . $property_type_id . ' to any category');
+        error_log('RES DEBUG - Available category mappings: ' . var_export($this->options['category_mapping'], true));
         return null;
     }
 
