@@ -39,8 +39,7 @@ class Real_Estate_Scraper_Scraper
 
         try {
             error_log('=== SCRAPER STARTED ===');
-            error_log('Categories: ' . implode(', ', array_keys($this->options['category_urls'])));
-
+            
             $stats = array(
                 'total_found' => 0,
                 'new_added' => 0,
@@ -51,6 +50,11 @@ class Real_Estate_Scraper_Scraper
             // Global limit for total ads processed across all categories
             $max_ads_global = $this->options['max_ads_per_session'] ?? 4;
             $ads_processed_global = 0;
+            
+            // Log configuration
+            $category_count = count($this->options['category_urls']);
+            $max_display = ($max_ads_global == 0) ? 'unlimited' : $max_ads_global;
+            error_log("Config: {$category_count} categories, Max: {$max_display} ads/session");
 
             // Get valid categories
             $valid_categories = array();
@@ -76,7 +80,6 @@ class Real_Estate_Scraper_Scraper
                 // Determine next category
                 if ($category_index == 0) {
                     $next_category = $this->get_next_category_for_rotation();
-                    error_log("[ROTATION] Start: {$next_category}");
                 } else {
                     $next_category = $category_keys[$category_index % count($category_keys)];
                 }
@@ -93,6 +96,12 @@ class Real_Estate_Scraper_Scraper
                     $stats['errors'] += $category_stats['errors'];
 
                     $ads_processed_global += $category_stats['found'];
+                    
+                    // Log progress
+                    if ($max_ads_global > 0) {
+                        $progress_status = ($ads_processed_global >= $max_ads_global) ? ' (LIMIT REACHED)' : '';
+                        error_log("[PROGRESS] {$ads_processed_global}/{$max_ads_global} ads processed{$progress_status}");
+                    }
                 } else {
                     break;
                 }
@@ -106,6 +115,11 @@ class Real_Estate_Scraper_Scraper
 
             $execution_time = round(microtime(true) - $start_time, 2);
             $stats['execution_time'] = $execution_time;
+
+            // Log scraper completion
+            error_log('=== SCRAPER COMPLETED ===');
+            error_log("Stats: Processed={$ads_processed_global}, New={$stats['new_added']}, Duplicates={$stats['duplicates_skipped']}, Errors={$stats['errors']}");
+            error_log("Time: {$execution_time}s");
 
             $this->logger->log_scraper_end($stats);
 
@@ -141,7 +155,8 @@ class Real_Estate_Scraper_Scraper
         try {
             // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
-            error_log("[CATEGORY] {$category_key} ({$url}) → Found " . count($property_urls) . " ads");
+            $category_upper = strtoupper($category_key);
+            error_log("[CATEGORY] {$category_upper} ({$url}) → " . count($property_urls) . " ads");
 
             if (empty($property_urls)) {
                 return $stats;
@@ -328,14 +343,29 @@ class Real_Estate_Scraper_Scraper
             $post_id = $this->mapper->create_property_post($property_data, $category_key);
 
             if ($post_id) {
-                error_log("[INSERT] Post ID={$post_id}, Cat={$category_key}, Title=\"{$property_data['title']}\"");
+                $term_id = $this->options['category_mapping'][$category_key] ?? 'N/A';
+                $category_upper = strtoupper($category_key);
+                error_log("[INSERT] Post ID={$post_id}, Cat={$category_upper} (Term ID={$term_id}), Title=\"{$property_data['title']}\"");
                 return array('success' => true, 'is_new' => true, 'post_id' => $post_id);
             } else {
                 throw new Exception('Failed to create property post');
             }
 
         } catch (Exception $e) {
-            error_log("[ERROR] {$property_url}: " . $e->getMessage());
+            // Enhanced error logging
+            error_log("[ERROR] {$property_url}");
+            if (!empty($property_data)) {
+                error_log("  → Extraction: OK");
+                if (!empty($property_data['title'])) {
+                    error_log("  → Title: \"{$property_data['title']}\"");
+                }
+                if (!empty($property_data['price'])) {
+                    error_log("  → Price: \"{$property_data['price']}\"");
+                }
+            } else {
+                error_log("  → Extraction: FAILED");
+            }
+            error_log("  → Reason: " . $e->getMessage());
             return array('success' => false, 'error' => $e->getMessage());
         }
     }
@@ -585,8 +615,6 @@ class Real_Estate_Scraper_Scraper
             return 'apartamente';
         }
 
-        error_log("[ROTATION] Last: ID={$last_property->ID}, Cat={$last_category}");
-
         // Find next category in rotation
         $current_index = array_search($last_category, $category_order);
         if ($current_index === false) {
@@ -596,7 +624,11 @@ class Real_Estate_Scraper_Scraper
         $next_index = ($current_index + 1) % count($category_order);
         $next_category = $category_order[$next_index];
 
-        error_log("[ROTATION] Next: {$next_category}");
+        // Log rotation with uppercase categories
+        $last_cat_upper = strtoupper($last_category);
+        $next_cat_upper = strtoupper($next_category);
+        error_log("[ROTATION] Last post: ID={$last_property->ID} ({$last_cat_upper}) → Next: {$next_cat_upper}");
+        
         return $next_category;
     }
 
