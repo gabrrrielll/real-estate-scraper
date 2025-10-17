@@ -163,8 +163,8 @@ class Real_Estate_Scraper_Scraper
             }
 
             // Try to find a new (non-duplicate) property from this category
-            // Limit attempts to avoid processing too many duplicates
-            $max_attempts = min(5, count($property_urls));
+            // Use properties_to_check setting to determine how deep to check
+            $max_attempts = min($this->options['properties_to_check'], count($property_urls));
             $attempt = 0;
 
             while ($attempt < $max_attempts && $stats['new'] == 0) {
