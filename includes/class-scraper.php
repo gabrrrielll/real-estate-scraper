@@ -25,15 +25,9 @@ class Real_Estate_Scraper_Scraper
 
     private function __construct()
     {
-        error_log('RES DEBUG - Scraper constructor called at: ' . current_time('mysql'));
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
-        error_log('RES DEBUG - Logger instance created');
         $this->mapper = Real_Estate_Scraper_Mapper::get_instance();
-        error_log('RES DEBUG - Mapper instance created');
         $this->options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Options loaded in constructor: ' . var_export($this->options, true));
-        $this->logger->debug('SCRAPER DEBUG - Scraper constructor options: ' . var_export($this->options, true));
-        error_log('RES DEBUG - Scraper constructor completed');
     }
 
     /**
@@ -41,17 +35,11 @@ class Real_Estate_Scraper_Scraper
      */
     public function run_scraper()
     {
-        error_log('RES DEBUG - run_scraper() method called at: ' . current_time('mysql'));
         $start_time = microtime(true);
-        error_log('RES DEBUG - run_scraper() options: ' . var_export($this->options, true));
-        error_log('SCRAPER DEBUG - Running scraper. Current options: ' . var_export($this->options, true));
 
         try {
-            error_log('RES DEBUG - About to log scraper start');
             error_log('=== SCRAPER STARTED ===');
-            error_log('Categories to scrape: ' . implode(', ', array_keys($this->options['category_urls'])));
-            error_log('Properties to check per category: ' . $this->options['properties_to_check']);
-            error_log('RES DEBUG - Scraper start logged successfully');
+            error_log('Categories: ' . implode(', ', array_keys($this->options['category_urls'])));
 
             $stats = array(
                 'total_found' => 0,
@@ -64,27 +52,7 @@ class Real_Estate_Scraper_Scraper
             $max_ads_global = $this->options['max_ads_per_session'] ?? 4;
             $ads_processed_global = 0;
 
-            // --- TEMPORARY TEST: Process single property directly ---
-            // $test_url = RES_SCRAPER_CONFIG['single_property_test_url'];
-            // if (!empty($test_url)) {
-            //     $this->logger->info("--- TEMPORARY TEST: Processing single property: {$test_url} ---");
-            //     $result = $this->process_property($test_url, 'test_category'); // Use a dummy category key
-            //     if ($result['success']) {
-            //         $stats['total_found'] = 1;
-            //         if ($result['is_new']) {
-            //             $stats['new_added'] = 1;
-            //         } else {
-            //             $stats['duplicates_skipped'] = 1;
-            //         }
-            //     } else {
-            //         $stats['errors'] = 1;
-            //     }
-            // } else {
-            // --- NEW LOGIC: Rotate through categories ---
-            error_log('SCRAPER DEBUG - Category URLs before rotation: ' . var_export($this->options['category_urls'], true));
-            error_log('RES DEBUG - Starting category rotation...');
-
-            // Get valid categories (non-empty URLs)
+            // Get valid categories
             $valid_categories = array();
             foreach ($this->options['category_urls'] as $category_key => $url) {
                 if (!empty($url)) {
@@ -93,7 +61,6 @@ class Real_Estate_Scraper_Scraper
             }
 
             if (empty($valid_categories)) {
-                error_log('RES DEBUG - No valid categories found');
                 return array(
                     'success' => false,
                     'message' => __('No valid category URLs configured.', 'real-estate-scraper'),
@@ -101,24 +68,21 @@ class Real_Estate_Scraper_Scraper
                 );
             }
 
-            // NEW LOGIC: Process categories in rotation until max_ads_per_session limit is reached
+            // Process categories in rotation
             $category_index = 0;
             $category_keys = array_keys($valid_categories);
 
             while ($max_ads_global == 0 || $ads_processed_global < $max_ads_global) {
-                // Determine next category based on last added property (only for first iteration)
+                // Determine next category
                 if ($category_index == 0) {
                     $next_category = $this->get_next_category_for_rotation();
-                    error_log("RES DEBUG - Starting rotation from category: {$next_category}");
+                    error_log("[ROTATION] Start: {$next_category}");
                 } else {
-                    // For subsequent iterations, use circular rotation
                     $next_category = $category_keys[$category_index % count($category_keys)];
-                    error_log("RES DEBUG - Continuing rotation with category: {$next_category}");
                 }
 
                 if (!empty($next_category) && isset($valid_categories[$next_category])) {
                     $url = $valid_categories[$next_category];
-                    error_log("RES DEBUG - Processing category: {$next_category}, URL: {$url}");
 
                     // Process one property from this category
                     $category_stats = $this->process_category_rotation($next_category, $url, $max_ads_global, $ads_processed_global);
@@ -128,29 +92,17 @@ class Real_Estate_Scraper_Scraper
                     $stats['duplicates_skipped'] += $category_stats['duplicates'];
                     $stats['errors'] += $category_stats['errors'];
 
-                    // Update global counter
                     $ads_processed_global += $category_stats['found'];
-
-                    // If no properties were found in this category, move to next
-                    if ($category_stats['found'] == 0) {
-                        error_log("RES DEBUG - No properties found in category {$next_category}, moving to next");
-                    }
                 } else {
-                    error_log("RES DEBUG - No valid next category found or category not in valid categories");
                     break;
                 }
 
-                // Move to next category
                 $category_index++;
 
-                // If we've gone through all categories and no new properties were added, break
                 if ($category_index >= count($category_keys) && $stats['new_added'] == 0) {
-                    error_log("RES DEBUG - Completed full rotation with no new properties, stopping");
                     break;
                 }
             }
-            // }
-            // --- END TEMPORARY TEST ---
 
             $execution_time = round(microtime(true) - $start_time, 2);
             $stats['execution_time'] = $execution_time;
@@ -179,9 +131,6 @@ class Real_Estate_Scraper_Scraper
      */
     private function process_category_rotation($category_key, $url, $max_ads_global = 0, $ads_processed_global = 0)
     {
-        error_log("RES DEBUG - process_category_rotation() called for: {$category_key}, URL: {$url}");
-        error_log("--- Processing one property from category: {$category_key} ---");
-
         $stats = array(
             'found' => 0,
             'new' => 0,
@@ -192,35 +141,29 @@ class Real_Estate_Scraper_Scraper
         try {
             // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
-            error_log('RES DEBUG - get_property_urls_from_category returned: ' . count($property_urls) . ' URLs');
+            error_log("[CATEGORY] {$category_key} ({$url}) → Found " . count($property_urls) . " ads");
 
             if (empty($property_urls)) {
-                error_log("RES DEBUG - No properties found in category {$category_key}");
                 return $stats;
             }
 
-            // Process only the first property from this category
+            // Process first property
             $property_url = $property_urls[0];
-            error_log("RES DEBUG - Processing first property from category {$category_key}: {$property_url}");
-
             $result = $this->process_property($property_url, $category_key);
 
             if ($result['success']) {
                 $stats['found'] = 1;
                 if ($result['is_new']) {
                     $stats['new'] = 1;
-                    error_log("RES DEBUG - New property added from category {$category_key}");
                 } else {
                     $stats['duplicates'] = 1;
-                    error_log("RES DEBUG - Duplicate property found in category {$category_key}");
                 }
             } else {
                 $stats['errors'] = 1;
-                error_log("RES DEBUG - Error processing property from category {$category_key}: " . $result['message']);
             }
 
         } catch (Exception $e) {
-            $this->logger->error("Error processing category {$category_key}: " . $e->getMessage());
+            $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
             $stats['errors'] = 1;
         }
 
@@ -232,10 +175,6 @@ class Real_Estate_Scraper_Scraper
      */
     private function process_category($category_key, $url, $max_ads_global = 0, $ads_processed_global = 0)
     {
-        error_log("RES DEBUG - process_category() called for: {$category_key}, URL: {$url}");
-        error_log("--- Processing category: {$category_key} ---");
-        error_log("URL: {$url}");
-
         $stats = array(
             'found' => 0,
             'new' => 0,
@@ -244,26 +183,19 @@ class Real_Estate_Scraper_Scraper
         );
 
         try {
-            error_log('RES DEBUG - About to get property URLs from category page');
-            // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
-            error_log('RES DEBUG - get_property_urls_from_category returned: ' . count($property_urls) . ' URLs');
 
-            // Limit the number of properties to process based on global limit
+            // Limit based on global limit
             $remaining_ads = $max_ads_global - $ads_processed_global;
             if ($max_ads_global > 0 && $remaining_ads > 0) {
                 if (count($property_urls) > $remaining_ads) {
-                    error_log("RES DEBUG - Limiting processing to {$remaining_ads} properties out of " . count($property_urls) . " found for category {$category_key} (global limit: {$max_ads_global}, already processed: {$ads_processed_global})");
                     $property_urls = array_slice($property_urls, 0, $remaining_ads);
                 }
             } elseif ($max_ads_global > 0 && $remaining_ads <= 0) {
-                error_log("RES DEBUG - Global limit reached, skipping category {$category_key}");
                 $property_urls = array();
             }
 
             $stats['found'] = count($property_urls);
-
-            $this->logger->info("Found " . count($property_urls) . " properties in category {$category_key}");
 
             // Process each property
             foreach ($property_urls as $property_url) {
@@ -281,7 +213,7 @@ class Real_Estate_Scraper_Scraper
             }
 
         } catch (Exception $e) {
-            $this->logger->error("Error processing category {$category_key}: " . $e->getMessage());
+            $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
             $stats['errors']++;
         }
 
@@ -295,44 +227,31 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_property_urls_from_category($category_url)
     {
-        error_log("RES DEBUG - get_property_urls_from_category() called for: {$category_url}");
         $max_attempts = $this->options['retry_attempts'];
-        $retry_interval = RES_SCRAPER_CONFIG['retry_interval']; // Use retry_interval from constants.php
-        error_log("RES DEBUG - Max attempts: {$max_attempts}, Retry interval: {$retry_interval}");
+        $retry_interval = RES_SCRAPER_CONFIG['retry_interval'];
 
         for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
             try {
-                error_log("RES DEBUG - Fetching category page: {$category_url} (attempt {$attempt})");
-
                 $response = wp_remote_get($category_url, array(
                     'timeout' => 30,
                     'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
                 ));
 
                 if (is_wp_error($response)) {
-                    error_log('RES DEBUG - wp_remote_get returned WP_Error: ' . $response->get_error_message());
                     throw new Exception($response->get_error_message());
                 }
 
-                error_log('RES DEBUG - wp_remote_get successful, response code: ' . wp_remote_retrieve_response_code($response));
                 $body = wp_remote_retrieve_body($response);
-                error_log('RES DEBUG - Response body length: ' . strlen($body) . ' bytes');
-
                 if (empty($body)) {
-                    error_log('RES DEBUG - Response body is empty!');
                     throw new Exception('Empty response body');
                 }
 
-                // Parse HTML to extract property URLs
-                error_log('RES DEBUG - About to parse property URLs from HTML');
+                // Parse HTML
                 $property_urls = $this->parse_property_urls_from_html($body);
-                error_log('RES DEBUG - parse_property_urls_from_html returned: ' . count($property_urls) . ' URLs');
 
                 // Limit to configured number
                 $limit = $this->options['properties_to_check'];
                 $property_urls = array_slice($property_urls, 0, $limit);
-
-                $this->logger->info("Successfully extracted " . count($property_urls) . " property URLs");
 
                 return $property_urls;
 
@@ -340,8 +259,7 @@ class Real_Estate_Scraper_Scraper
                 $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
                 if ($attempt < $max_attempts) {
-                    // TEMPORARILY DISABLED: sleep($retry_interval);
-                    error_log('RES DEBUG - Retry sleep disabled for testing');
+                    // sleep disabled for testing
                 } else {
                     $this->logger->log_final_error($e->getMessage());
                     throw $e;
@@ -390,14 +308,14 @@ class Real_Estate_Scraper_Scraper
      */
     private function process_property($property_url, $category_key)
     {
-        $this->logger->log_property_start($property_url);
-
         try {
             // Check if property already exists
             if ($this->is_duplicate($property_url)) {
-                $this->logger->log_duplicate_found($property_url, 'existing');
+                error_log("[AD] {$property_url} → Duplicate (Skip)");
                 return array('success' => true, 'is_new' => false);
             }
+
+            error_log("[AD] {$property_url} → New (Extracting...)");
 
             // Fetch property data
             $property_data = $this->fetch_property_data($property_url);
@@ -406,20 +324,18 @@ class Real_Estate_Scraper_Scraper
                 throw new Exception('Failed to fetch property data');
             }
 
-            $this->logger->log_property_data($property_data);
-
             // Map and create WordPress post
             $post_id = $this->mapper->create_property_post($property_data, $category_key);
 
             if ($post_id) {
-                $this->logger->log_property_created($post_id, $property_data['title']);
+                error_log("[INSERT] Post ID={$post_id}, Cat={$category_key}, Title=\"{$property_data['title']}\"");
                 return array('success' => true, 'is_new' => true, 'post_id' => $post_id);
             } else {
                 throw new Exception('Failed to create property post');
             }
 
         } catch (Exception $e) {
-            $this->logger->error("Error processing property {$property_url}: " . $e->getMessage());
+            error_log("[ERROR] {$property_url}: " . $e->getMessage());
             return array('success' => false, 'error' => $e->getMessage());
         }
     }
@@ -447,12 +363,9 @@ class Real_Estate_Scraper_Scraper
     private function fetch_property_data($property_url)
     {
         $max_attempts = $this->options['retry_attempts'];
-        $retry_interval = $this->options['retry_interval'];
 
         for ($attempt = 1; $attempt <= $max_attempts; $attempt++) {
             try {
-                $this->logger->debug("Fetching property data: {$property_url} (attempt {$attempt})");
-
                 $response = wp_remote_get($property_url, array(
                     'timeout' => 30,
                     'user-agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -467,20 +380,14 @@ class Real_Estate_Scraper_Scraper
                     throw new Exception('Empty response body');
                 }
 
-                // Parse property data from HTML
+                // Parse property data
                 $property_data = $this->parse_property_data_from_html($body, $property_url);
-
-                $this->logger->info("Successfully parsed property data");
-
                 return $property_data;
 
             } catch (Exception $e) {
                 $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
-                if ($attempt < $max_attempts) {
-                    // TEMPORARILY DISABLED: sleep($retry_interval);
-                    error_log('RES DEBUG - Retry sleep disabled for testing (fetch_property_data)');
-                } else {
+                if ($attempt >= $max_attempts) {
                     $this->logger->log_final_error($e->getMessage());
                     throw $e;
                 }
@@ -583,14 +490,10 @@ class Real_Estate_Scraper_Scraper
             $property_data['longitude'] = trim($longitude_nodes->item(0)->textContent);
         }
 
-        // Extract phone number using existing XPath from constants.php
+        // Extract phone number
         $phone_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['phone_xpath']);
         if ($phone_nodes->length > 0) {
-            $phone_number = trim($phone_nodes->item(0)->textContent);
-            $property_data['phone_number'] = $phone_number;
-            error_log('RES DEBUG - PHONE NUMBER EXTRACTED: ' . $phone_number);
-        } else {
-            error_log('RES DEBUG - No phone number found using XPath: ' . RES_SCRAPER_CONFIG['property_data']['phone_xpath']);
+            $property_data['phone_number'] = trim($phone_nodes->item(0)->textContent);
         }
 
         // Extract images
@@ -635,11 +538,8 @@ class Real_Estate_Scraper_Scraper
      */
     private function extract_specifications($xpath)
     {
-        error_log('RES DEBUG - === EXTRACTING SPECIFICATIONS ===');
-
         $specifications = array();
         $spec_nodes = $xpath->query(RES_SCRAPER_CONFIG['property_data']['specifications_xpath']);
-        error_log('RES DEBUG - Found ' . $spec_nodes->length . ' specification nodes');
 
         if ($spec_nodes->length > 0) {
             foreach ($spec_nodes as $node) {
@@ -647,17 +547,11 @@ class Real_Estate_Scraper_Scraper
                 if ($spans->length >= 2) {
                     $attribute = trim($spans->item(0)->textContent);
                     $value = trim($spans->item(1)->textContent);
-
-                    // Add to specifications array
                     $specifications[$attribute] = $value;
-                    error_log('RES DEBUG - SPECIFICATION: "' . $attribute . '" = "' . $value . '"');
                 }
             }
-        } else {
-            error_log('RES DEBUG - No specifications found');
         }
 
-        error_log('RES DEBUG - === SPECIFICATIONS EXTRACTION COMPLETE - Found ' . count($specifications) . ' specifications ===');
         return $specifications;
     }
 
@@ -666,28 +560,8 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_geocoded_address($latitude, $longitude)
     {
-        error_log('RES DEBUG - === GETTING GEOCODED ADDRESS ===');
-        error_log('RES DEBUG - Coordinates: lat=' . $latitude . ', lon=' . $longitude);
-
         $geocoder = Real_Estate_Scraper_Geocoder::get_instance();
-        $address = $geocoder->reverse_geocode($latitude, $longitude);
-
-        if ($address) {
-            error_log('RES DEBUG - Geocoding successful!');
-            error_log('RES DEBUG - Display Name: ' . $address['display_name']);
-            error_log('RES DEBUG - City: ' . $address['city']);
-            error_log('RES DEBUG - Street: ' . $address['street']);
-            error_log('RES DEBUG - House Number: ' . $address['house_number']);
-            error_log('RES DEBUG - Postal Code: ' . $address['postal_code']);
-            error_log('RES DEBUG - Country: ' . $address['country']);
-            error_log('RES DEBUG - County: ' . $address['county']);
-            error_log('RES DEBUG - === GEOCODING COMPLETE ===');
-            return $address;
-        } else {
-            error_log('RES DEBUG - Geocoding failed!');
-            error_log('RES DEBUG - === GEOCODING COMPLETE ===');
-            return null;
-        }
+        return $geocoder->reverse_geocode($latitude, $longitude);
     }
 
     /**
@@ -695,16 +569,12 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_next_category_for_rotation()
     {
-        error_log('RES DEBUG - === DETERMINING NEXT CATEGORY FOR ROTATION ===');
-
-        // Define category order
         $category_order = array('apartamente', 'garsoniere', 'case_vile', 'spatii_comerciale');
 
         // Get last added property
         $last_property = $this->get_last_added_property();
 
         if (!$last_property) {
-            error_log('RES DEBUG - No properties found, starting with first category: apartamente');
             return 'apartamente';
         }
 
@@ -712,23 +582,21 @@ class Real_Estate_Scraper_Scraper
         $last_category = $this->get_property_category($last_property);
 
         if (!$last_category) {
-            error_log('RES DEBUG - Could not determine category of last property, starting with first category: apartamente');
             return 'apartamente';
         }
 
-        error_log('RES DEBUG - Last property category: ' . $last_category);
+        error_log("[ROTATION] Last: ID={$last_property->ID}, Cat={$last_category}");
 
         // Find next category in rotation
         $current_index = array_search($last_category, $category_order);
         if ($current_index === false) {
-            error_log('RES DEBUG - Last category not found in order, starting with first category: apartamente');
             return 'apartamente';
         }
 
         $next_index = ($current_index + 1) % count($category_order);
         $next_category = $category_order[$next_index];
 
-        error_log('RES DEBUG - Next category in rotation: ' . $next_category);
+        error_log("[ROTATION] Next: {$next_category}");
         return $next_category;
     }
 
@@ -751,13 +619,7 @@ class Real_Estate_Scraper_Scraper
             )
         ));
 
-        if (!empty($last_property)) {
-            error_log('RES DEBUG - Last property found: ID ' . $last_property[0]->ID . ', Title: ' . $last_property[0]->post_title);
-            return $last_property[0];
-        }
-
-        error_log('RES DEBUG - No properties found in database');
-        return null;
+        return !empty($last_property) ? $last_property[0] : null;
     }
 
     /**
@@ -765,27 +627,21 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_property_category($property)
     {
-        // Get property type terms for this property
         $property_types = wp_get_post_terms($property->ID, 'property_type');
 
         if (is_wp_error($property_types) || empty($property_types)) {
-            error_log('RES DEBUG - Property has no property_type terms');
             return null;
         }
 
         $property_type_id = $property_types[0]->term_id;
-        error_log('RES DEBUG - Property type ID: ' . $property_type_id);
 
-        // Map property type ID to category using category_mapping
+        // Map property type ID to category
         foreach ($this->options['category_mapping'] as $category_key => $type_id) {
             if ($type_id == $property_type_id) {
-                error_log('RES DEBUG - Property belongs to category: ' . $category_key . ' (type ID: ' . $type_id . ')');
                 return $category_key;
             }
         }
 
-        error_log('RES DEBUG - Could not map property type ID ' . $property_type_id . ' to any category');
-        error_log('RES DEBUG - Available category mappings: ' . var_export($this->options['category_mapping'], true));
         return null;
     }
 

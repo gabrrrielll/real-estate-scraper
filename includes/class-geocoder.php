@@ -34,7 +34,6 @@ class Real_Estate_Scraper_Geocoder
     public function reverse_geocode($latitude, $longitude)
     {
         if (empty($latitude) || empty($longitude)) {
-            error_log('RES DEBUG - Geocoder: Missing coordinates');
             return null;
         }
 
@@ -43,11 +42,8 @@ class Real_Estate_Scraper_Geocoder
         $lon = $this->clean_coordinate($longitude);
 
         if (empty($lat) || empty($lon)) {
-            error_log('RES DEBUG - Geocoder: Invalid coordinates - lat: ' . $latitude . ', lon: ' . $longitude);
             return null;
         }
-
-        error_log('RES DEBUG - Geocoder: Requesting address for coordinates - lat: ' . $lat . ', lon: ' . $lon);
 
         // Prepare API request
         $url = $this->api_url . '?' . http_build_query(array(
@@ -59,8 +55,6 @@ class Real_Estate_Scraper_Geocoder
             'accept-language' => 'ro'
         ));
 
-        error_log('RES DEBUG - Geocoder: API URL: ' . $url);
-
         // Make API request
         $response = wp_remote_get($url, array(
             'timeout' => 10,
@@ -71,29 +65,18 @@ class Real_Estate_Scraper_Geocoder
         ));
 
         if (is_wp_error($response)) {
-            error_log('RES DEBUG - Geocoder: API request failed - ' . $response->get_error_message());
             return null;
         }
 
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
 
-        if (json_last_error() !== JSON_ERROR_NONE) {
-            error_log('RES DEBUG - Geocoder: Invalid JSON response - ' . json_last_error_msg());
-            return null;
-        }
-
-        if (empty($data)) {
-            error_log('RES DEBUG - Geocoder: Empty response from API');
+        if (json_last_error() !== JSON_ERROR_NONE || empty($data)) {
             return null;
         }
 
         // Extract address information
-        $address = $this->extract_address_info($data);
-
-        error_log('RES DEBUG - Geocoder: Extracted address - ' . json_encode($address, JSON_UNESCAPED_UNICODE));
-
-        return $address;
+        return $this->extract_address_info($data);
     }
 
     /**
@@ -183,15 +166,7 @@ class Real_Estate_Scraper_Geocoder
      */
     public function test_geocoding()
     {
-        error_log('RES DEBUG - Geocoder: Testing with sample coordinates');
-        $result = $this->reverse_geocode('45.9432', '24.9668');
-
-        if ($result) {
-            error_log('RES DEBUG - Geocoder: Test successful');
-            return $result;
-        } else {
-            error_log('RES DEBUG - Geocoder: Test failed');
-            return null;
-        }
+        return $this->reverse_geocode('45.9432', '24.9668');
     }
 }
+

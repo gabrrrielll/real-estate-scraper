@@ -177,37 +177,22 @@ class Real_Estate_Scraper
 
     public function ajax_run_scraper()
     {
-        error_log('RES DEBUG - AJAX run_scraper called.');
         check_ajax_referer('res_nonce', 'nonce');
-        error_log('RES DEBUG - Nonce check passed for run_scraper.');
 
         if (!current_user_can('manage_options')) {
-            error_log('RES DEBUG - User does not have manage_options capability for run_scraper.');
             wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
         }
-        error_log('RES DEBUG - User permissions check passed for run_scraper.');
 
-        // Debug: Check options before creating scraper instance
-        $options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Options before scraper: ' . var_export($options, true));
-        error_log('RES DEBUG - Category URLs: ' . var_export($options['category_urls'] ?? 'NOT SET', true));
-
-        // Run scraper
-        error_log('RES DEBUG - Creating scraper instance...');
         try {
             $scraper = Real_Estate_Scraper_Scraper::get_instance();
-            error_log('RES DEBUG - Scraper instance created successfully, type: ' . get_class($scraper));
-            error_log('RES DEBUG - Calling run_scraper()...');
             $result = $scraper->run_scraper();
-            error_log('RES DEBUG - run_scraper() completed without exception');
         } catch (Exception $e) {
-            error_log('RES DEBUG - Exception in scraper: ' . $e->getMessage());
+            error_log('[SCRAPER ERROR] ' . $e->getMessage());
             $result = array('success' => 0, 'message' => 'Scraper error: ' . $e->getMessage());
         } catch (Error $e) {
-            error_log('RES DEBUG - Fatal error in scraper: ' . $e->getMessage());
+            error_log('[SCRAPER FATAL] ' . $e->getMessage());
             $result = array('success' => 0, 'message' => 'Fatal error: ' . $e->getMessage());
         }
-        error_log('RES DEBUG - Scraper run completed. Result: ' . print_r($result, true));
 
         wp_send_json($result);
     }

@@ -67,34 +67,20 @@ class Real_Estate_Scraper_Admin
      */
     public function add_inline_assets()
     {
-        error_log('RES DEBUG - ===== ADD_INLINE_ASSETS CALLED =====');
-        error_log('RES DEBUG - Current screen: ' . (get_current_screen() ? get_current_screen()->id : 'NO SCREEN'));
-        error_log('RES DEBUG - Plugin DIR: ' . REAL_ESTATE_SCRAPER_PLUGIN_DIR);
-
         // Load jQuery first
         wp_enqueue_script('jquery');
-        error_log('RES DEBUG - jQuery enqueued in add_inline_assets');
 
         // CSS
         $css_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/css/admin.css';
-        error_log('RES DEBUG - CSS path: ' . $css_path);
-        error_log('RES DEBUG - CSS exists: ' . (file_exists($css_path) ? 'YES' : 'NO'));
-
         if (file_exists($css_path)) {
             echo '<style type="text/css">';
             echo file_get_contents($css_path);
             echo '</style>';
-            error_log('RES DEBUG - CSS loaded inline successfully');
-        } else {
-            error_log('RES DEBUG - CSS file not found!');
         }
 
         // JS Configuration
-        error_log('RES DEBUG - Creating JS configuration');
         echo '<script type="text/javascript">';
-
         $cron_status_data = $this->_get_cron_status_data();
-
         echo 'window.realEstateScraper = ' . json_encode(array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('res_nonce'),
@@ -118,25 +104,16 @@ class Real_Estate_Scraper_Admin
             )
         )) . ';';
         echo '</script>';
-        error_log('RES DEBUG - JS configuration created');
 
         // JS Code with jQuery dependency check
         $js_path = REAL_ESTATE_SCRAPER_PLUGIN_DIR . 'admin/js/admin.js';
-        error_log('RES DEBUG - JS path: ' . $js_path);
-        error_log('RES DEBUG - JS exists: ' . (file_exists($js_path) ? 'YES' : 'NO'));
-
         if (file_exists($js_path)) {
             echo '<script type="text/javascript">';
             echo 'jQuery(document).ready(function($) {';
             echo file_get_contents($js_path);
             echo '});';
             echo '</script>';
-            error_log('RES DEBUG - JS loaded inline with jQuery wrapper successfully');
-        } else {
-            error_log('RES DEBUG - JS file not found!');
         }
-
-        error_log('RES DEBUG - ===== ADD_INLINE_ASSETS COMPLETED =====');
     }
 
     /**
@@ -164,15 +141,6 @@ class Real_Estate_Scraper_Admin
      */
     public function admin_page()
     {
-        error_log('RES DEBUG - ===== ADMIN PAGE FUNCTION CALLED =====');
-        error_log('RES DEBUG - Function called at: ' . current_time('mysql'));
-        error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
-        error_log('RES DEBUG - User can manage options: ' . (current_user_can('manage_options') ? 'YES' : 'NO'));
-        error_log('RES DEBUG - Request method: ' . $_SERVER['REQUEST_METHOD']);
-        error_log('RES DEBUG - POST data count: ' . count($_POST));
-        error_log('RES DEBUG - POST keys: ' . implode(', ', array_keys($_POST)));
-        error_log('RES DEBUG - Current screen ID: ' . (get_current_screen() ? get_current_screen()->id : 'NO SCREEN'));
-
         // Show success message if redirected after save
         if (isset($_GET['settings-saved']) && $_GET['settings-saved'] == '1') {
             echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
@@ -182,26 +150,12 @@ class Real_Estate_Scraper_Admin
 
         // Check permissions first
         if (!current_user_can('manage_options')) {
-            error_log('RES DEBUG - User does not have manage_options capability');
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-        // No direct form processing here, it's handled by admin_post hook
-        error_log('RES DEBUG - Admin page loaded. Form processing handled by admin_post.');
-
-        // Get current options - force refresh from database for display
+        // Get current options
         wp_cache_delete('real_estate_scraper_options', 'options');
         $options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Current options loaded for display (after targeted cache delete): ' . print_r($options, true));
-
-        // Debugging: Log options values right before form rendering
-        error_log('RES DEBUG - Options values just before form rendering:');
-        error_log('RES DEBUG - URL Apartamente: ' . ($options['category_urls']['apartamente'] ?? 'N/A'));
-        error_log('RES DEBUG - Mapping Apartamente: ' . ($options['category_mapping']['apartamente'] ?? 'N/A'));
-        error_log('RES DEBUG - Cron Interval: ' . ($options['cron_interval'] ?? 'N/A'));
-        error_log('RES DEBUG - Properties to Check: ' . ($options['properties_to_check'] ?? 'N/A'));
-        error_log('RES DEBUG - Default Status: ' . ($options['default_status'] ?? 'N/A'));
-        error_log('RES DEBUG - Enable Cron (from DB): ' . ($options['enable_cron'] ?? 'N/A')); // NEW LOG
 
         // Get property types for mapping
         $property_types = get_terms(array(
@@ -209,14 +163,8 @@ class Real_Estate_Scraper_Admin
             'hide_empty' => false
         ));
 
-        error_log('RES DEBUG - Property types found: ' . count($property_types));
         if (is_wp_error($property_types)) {
-            error_log('RES DEBUG - Error getting property types: ' . $property_types->get_error_message());
             $property_types = array();
-        } else {
-            foreach ($property_types as $type) {
-                error_log('RES DEBUG - Property type: ID=' . $type->term_id . ', Name=' . $type->name);
-            }
         }
 
         // Get cron info
@@ -234,12 +182,7 @@ class Real_Estate_Scraper_Admin
                 <div class="res-main-content">
             <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>">
                 <input type="hidden" name="action" value="res_save_settings" />
-                <?php
-                $nonce = wp_create_nonce('res_save_settings');
-        error_log('RES DEBUG - Generated nonce for form: ' . $nonce);
-        wp_nonce_field('res_save_settings', 'res_nonce');
-        error_log('RES DEBUG - Nonce field added to form');
-        ?>
+                <?php wp_nonce_field('res_save_settings', 'res_nonce'); ?>
                         
                         <div class="res-settings-section">
                             <h2><?php _e('Category URLs', 'real-estate-scraper'); ?></h2>
@@ -479,51 +422,42 @@ class Real_Estate_Scraper_Admin
      */
     public function handle_save_settings()
     {
-        // Start output buffering to catch any premature output
         ob_start();
-        error_log('RES DEBUG - ===== HANDLE_SAVE_SETTINGS CALLED VIA ADMIN_POST HOOK =====');
 
         // Verify nonce
         if (!isset($_POST['res_nonce']) || !wp_verify_nonce($_POST['res_nonce'], 'res_save_settings')) {
-            error_log('RES DEBUG - Nonce verification failed in handle_save_settings');
-            ob_end_clean(); // Clean buffer before dying
+            ob_end_clean();
             wp_die(__('Security check failed. Please try again.', 'real-estate-scraper'));
         }
 
         // Check permissions
         if (!current_user_can('manage_options')) {
-            error_log('RES DEBUG - User does not have manage_options capability in handle_save_settings');
-            ob_end_clean(); // Clean buffer before dying
+            ob_end_clean();
             wp_die(__('You do not have sufficient permissions to save settings.', 'real-estate-scraper'));
         }
 
         // Call the actual save settings logic
         $this->save_settings();
 
-        // After saving, reload options to ensure we have the latest data for verification
+        // After saving, reload options for verification
         wp_cache_delete('real_estate_scraper_options', 'options');
-        $options = get_option('real_estate_scraper_options', array()); // This will now fetch the fresh data
+        $options = get_option('real_estate_scraper_options', array());
 
         // Determine redirect URL
         $redirect_url = admin_url('admin.php?page=real-estate-scraper');
 
-        // The save_settings() function already logs if options match.
-        // We'll check if the options in the DB match the POST data for a more robust check.
+        // Verify save
         $post_category_urls = isset($_POST['category_urls']) ? array_map('sanitize_url', $_POST['category_urls']) : [];
-        $post_category_mapping = []; // Commented out
-        $post_cron_interval = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly'; // Activated, no sanitization
+        $post_cron_interval = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly';
         $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
-        $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft'; // Activated, no sanitization
-        $post_enable_cron = isset($_POST['enable_cron']) ? 1 : 0; // Correctly handle checkbox value: 1 if checked, 0 if unchecked
-        error_log('RES DEBUG - POST[\'enable_cron\'] raw: ' . (isset($_POST['enable_cron']) ? $_POST['enable_cron'] : 'NOT SET')); // NEW LOG
-        error_log('RES DEBUG - $post_enable_cron after processing: ' . $post_enable_cron); // NEW LOG
+        $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft';
+        $post_enable_cron = isset($_POST['enable_cron']) ? 1 : 0;
 
         $db_category_urls = $options['category_urls'] ?? [];
-        $db_category_mapping = []; // Commented out
-        $db_cron_interval = $options['cron_interval'] ?? 'hourly'; // Activated
+        $db_cron_interval = $options['cron_interval'] ?? 'hourly';
         $db_properties_to_check = $options['properties_to_check'] ?? 10;
-        $db_default_status = $options['default_status'] ?? 'draft'; // Activated
-        $db_enable_cron = $options['enable_cron'] ?? 0; // Activated
+        $db_default_status = $options['default_status'] ?? 'draft';
+        $db_enable_cron = $options['enable_cron'] ?? 0;
 
         $save_successful = (
             (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente']) &&
@@ -532,32 +466,17 @@ class Real_Estate_Scraper_Admin
             (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']) &&
             ($post_properties_to_check == $db_properties_to_check) &&
             ($post_cron_interval == $db_cron_interval) &&
-            ($post_default_status == $db_default_status) && // Added for Default Status
-            ($post_enable_cron == $db_enable_cron) // Added for Enable Cron
+            ($post_default_status == $db_default_status) &&
+            ($post_enable_cron == $db_enable_cron)
         );
-
-        // Old logic: $save_successful = (
-        //     $post_category_urls == $db_category_urls &&
-        //     $post_category_mapping == $db_category_mapping &&
-        //     $post_cron_interval == $db_cron_interval &&
-        //     $post_properties_to_check == $db_properties_to_check &&
-        //     $post_default_status == $db_default_status
-        // );
 
         if ($save_successful) {
             $redirect_url = add_query_arg('settings-saved', '1', $redirect_url);
-            error_log('RES DEBUG - Settings successfully verified in DB. Redirecting to: ' . $redirect_url);
         } else {
             $redirect_url = add_query_arg('settings-error', '1', $redirect_url);
-            error_log('RES DEBUG - Settings NOT VERIFIED in DB. Redirecting to: ' . $redirect_url);
-            error_log('RES DEBUG - POST Data: ' . print_r($_POST, true));
-            error_log('RES DEBUG - DB Data: ' . print_r($options, true));
         }
 
-        // Clean (aggressively) and end output buffering
         ob_end_clean();
-        error_log('RES DEBUG - Aggressive output buffer cleaned before redirect.');
-
         wp_redirect($redirect_url);
         exit;
     }
@@ -567,20 +486,6 @@ class Real_Estate_Scraper_Admin
      */
     private function save_settings()
     {
-        error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION CALLED =====');
-        error_log('RES DEBUG - Function entry time: ' . current_time('mysql'));
-        error_log('RES DEBUG - Current user ID: ' . get_current_user_id());
-
-        // Log all POST data in detail
-        error_log('RES DEBUG - POST data received:');
-        foreach ($_POST as $key => $value) {
-            if (is_array($value)) {
-                error_log('RES DEBUG - POST[' . $key . '] = ' . print_r($value, true));
-            } else {
-                error_log('RES DEBUG - POST[' . $key . '] = ' . $value);
-            }
-        }
-
         // Check if required fields are present
         $required_fields = array('category_urls', 'properties_to_check', 'cron_interval', 'default_status');
         $missing_fields = array();
@@ -592,13 +497,8 @@ class Real_Estate_Scraper_Admin
         }
 
         if (!empty($missing_fields)) {
-            error_log('RES DEBUG - Missing required POST fields: ' . implode(', ', $missing_fields));
-            error_log('RES DEBUG - Available POST keys: ' . implode(', ', array_keys($_POST)));
-            // No echo here, redirect happens in handle_save_settings
             return;
         }
-
-        error_log('RES DEBUG - All required fields present, proceeding with sanitization');
 
         // Sanitize and prepare options
         $options = array();
@@ -611,7 +511,6 @@ class Real_Estate_Scraper_Admin
                 'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
                 'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
             );
-            error_log('RES DEBUG - All Category URLs processed with sanitization: ' . print_r($options['category_urls'], true));
         }
 
         // Sanitize category mapping
@@ -622,85 +521,31 @@ class Real_Estate_Scraper_Admin
                 'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
                 'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
             );
-            error_log('RES DEBUG - Category mapping sanitized: ' . print_r($options['category_mapping'], true));
         }
 
-        // Other options (all activated for testing)
+        // Other options
         $options['cron_interval'] = isset($_POST['cron_interval']) ? $_POST['cron_interval'] : 'hourly';
         $options['properties_to_check'] = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $options['max_ads_per_session'] = isset($_POST['max_ads_per_session']) ? intval($_POST['max_ads_per_session']) : 4;
         $options['default_status'] = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft';
-        $options['enable_cron'] = isset($_POST['enable_cron']) ? 1 : 0; // Correctly handle checkbox value: 1 if checked, 0 if unchecked
+        $options['enable_cron'] = isset($_POST['enable_cron']) ? 1 : 0;
         $options['retry_attempts'] = 2;
         $options['retry_interval'] = 30;
 
-        error_log('RES DEBUG - Final options[\'enable_cron\'] before update_option: ' . ($options['enable_cron'] ?? 'NOT SET')); // NEW LOG
-        error_log('RES DEBUG - Final options array: ' . print_r($options, true)); // Reverted log message
-
-        // Get current options for comparison
-        $current_options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Current options: ' . print_r($current_options, true)); // Reverted log message
-
-        // Check if options actually changed
-        $options_changed = ($current_options !== $options);
-        error_log('RES DEBUG - Options changed: ' . ($options_changed ? 'YES' : 'NO'));
-
         // Update options
-        error_log('RES DEBUG - Calling update_option...');
-        error_log('RES DEBUG - Options being saved: ' . print_r($options, true));
+        update_option('real_estate_scraper_options', $options, false);
 
-        // Try to update the option
-        $result = update_option('real_estate_scraper_options', $options, false);
+        // Manage cron based on enable_cron setting
+        try {
+            $cron = Real_Estate_Scraper_Cron::get_instance();
 
-        error_log('RES DEBUG - update_option result: ' . var_export($result, true));
-
-        // Always verify what was actually saved
-        $saved_options = get_option('real_estate_scraper_options', array());
-        error_log('RES DEBUG - Options after update_option: ' . print_r($saved_options, true));
-
-        error_log('RES DEBUG - Saved options[\'enable_cron\'] after update_option: ' . ($saved_options['enable_cron'] ?? 'NOT SET')); // NEW LOG
-
-        // Check if the options match what we tried to save
-        $options_match = ($saved_options == $options);
-        error_log('RES DEBUG - Saved options match what we tried to save: ' . ($options_match ? 'YES' : 'NO'));
-
-        if ($options_match) {
-            error_log('RES DEBUG - Settings updated successfully, managing cron...');
-            // Manage cron based on enable_cron setting
-            try {
-                $cron = Real_Estate_Scraper_Cron::get_instance();
-
-                if ($options['enable_cron'] == 1) {
-                    // Cron is enabled, schedule/update it
-                    $cron->schedule_cron($options['cron_interval']);
-                    error_log('RES DEBUG - Cron enabled and scheduled with interval: ' . $options['cron_interval']);
-                } else {
-                    // Cron is disabled, clear it
-                    $cron->clear_cron();
-                    error_log('RES DEBUG - Cron disabled and cleared');
-                }
-            } catch (Exception $e) {
-                error_log('RES DEBUG - Error managing cron: ' . $e->getMessage());
-            }
-
-            // No echo here, redirect happens in handle_save_settings
-        } else {
-            error_log('RES DEBUG - Settings were not saved correctly');
-            error_log('RES DEBUG - Difference: Expected=' . print_r($options, true) . ' Got=' . print_r($saved_options, true));
-
-            // Try to save again with autoload = yes
-            error_log('RES DEBUG - Trying to save again with autoload=yes');
-            $result2 = update_option('real_estate_scraper_options', $options, true);
-            error_log('RES DEBUG - Second attempt result: ' . var_export($result2, true));
-
-            $saved_options2 = get_option('real_estate_scraper_options', array());
-            if ($saved_options2 == $options) {
-                // No echo here, redirect happens in handle_save_settings
+            if ($options['enable_cron'] == 1) {
+                $cron->schedule_cron($options['cron_interval']);
             } else {
-                // No echo here, redirect happens in handle_save_settings
+                $cron->clear_cron();
             }
+        } catch (Exception $e) {
+            error_log('[CRON ERROR] ' . $e->getMessage());
         }
-
-        error_log('RES DEBUG - ===== SAVE SETTINGS FUNCTION COMPLETED =====');
     }
 }

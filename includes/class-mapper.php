@@ -108,7 +108,6 @@ class Real_Estate_Scraper_Mapper
         foreach ($meta_fields as $key => $value) {
             if (!empty($value)) {
                 update_post_meta($post_id, $key, $value);
-                $this->logger->debug("Set meta {$key}: {$value}");
             }
         }
 
@@ -129,12 +128,7 @@ class Real_Estate_Scraper_Mapper
             $type_term = get_term_by('id', $property_type, 'property_type');
             if ($type_term) {
                 wp_set_post_terms($post_id, array($type_term->term_id), 'property_type');
-                $this->logger->debug("Set property_type: {$type_term->name} for category: {$category_key}");
-            } else {
-                $this->logger->debug("Property type term not found for ID: {$property_type}");
             }
-        } else {
-            $this->logger->debug("No property type mapping found for category: {$category_key}");
         }
     }
 
@@ -157,13 +151,10 @@ class Real_Estate_Scraper_Mapper
 
                 if ($existing_attachment_id) {
                     $image_id = $existing_attachment_id;
-                    $this->logger->debug("Image already exists, using existing attachment ID: {$image_id} for URL: {$image_url}");
                 } else {
                     $image_id = $this->download_and_attach_image($image_url, $post_id);
                     if ($image_id) {
-                        // Store original image URL as post meta for future duplicate checks
                         update_post_meta($image_id, '_real_estate_scraper_original_image_url', $image_url);
-                        $this->logger->debug("Downloaded and attached new image: {$image_url}, attachment ID: {$image_id}");
                     }
                 }
 
@@ -178,18 +169,14 @@ class Real_Estate_Scraper_Mapper
         if (!empty($uploaded_images)) {
             // Set first image as featured image
             set_post_thumbnail($post_id, $uploaded_images[0]);
-            $this->logger->debug("Set featured image for post ID: {$post_id} to attachment ID: {$uploaded_images[0]}");
 
-            // Delete any existing fave_property_images meta to ensure clean update
+            // Delete any existing fave_property_images meta
             delete_post_meta($post_id, 'fave_property_images');
 
-            // Add each image ID individually to fave_property_images meta field for Houzez gallery
+            // Add each image ID individually for Houzez gallery
             foreach ($uploaded_images as $image_id) {
                 add_post_meta($post_id, 'fave_property_images', $image_id);
             }
-            $this->logger->debug("Added individual fave_property_images meta for post ID: {$post_id} with: " . implode(', ', $uploaded_images));
-
-            $this->logger->info("Successfully processed " . count($uploaded_images) . " images for post ID: {$post_id}");
         }
     }
 
@@ -388,18 +375,14 @@ class Real_Estate_Scraper_Mapper
         // If we have geocoded address, format it properly
         if (isset($property_data['geocoded_address']) && !empty($property_data['geocoded_address'])) {
             $address = $property_data['geocoded_address'];
-
-            // Format address in the desired order: Street, Number, Sector, City, Postal Code, Country
             $formatted_address = $this->format_address_components($address);
 
             if (!empty($formatted_address)) {
-                error_log('RES DEBUG - Using formatted geocoded address: ' . $formatted_address);
                 return $this->clean_address($formatted_address);
             }
         }
 
         // Fallback to original address
-        error_log('RES DEBUG - Using original address: ' . $property_data['address']);
         return $this->clean_address($property_data['address']);
     }
 
@@ -446,12 +429,7 @@ class Real_Estate_Scraper_Mapper
         }
 
         // Join components with comma and space
-        $formatted = implode(', ', $components);
-
-        error_log('RES DEBUG - Main address components: Street=' . $street . ', Number=' . $house_number . ', Sector=' . $sector . ', Postal=' . $postal_code);
-        error_log('RES DEBUG - Formatted main address (no city/country): ' . $formatted);
-
-        return $formatted;
+        return implode(', ', $components);
     }
 
     /**
@@ -460,15 +438,12 @@ class Real_Estate_Scraper_Mapper
     private function save_dynamic_specifications($post_id, $specifications)
     {
         if (empty($specifications)) {
-            error_log('RES DEBUG - No specifications to save for post ' . $post_id);
             return;
         }
 
         $additional_features = array();
-        $index = 0;
 
         foreach ($specifications as $attribute => $value) {
-            // Skip empty values
             if (empty(trim($value))) {
                 continue;
             }
@@ -477,20 +452,10 @@ class Real_Estate_Scraper_Mapper
                 'fave_additional_feature_title' => trim($attribute),
                 'fave_additional_feature_value' => trim($value)
             );
-            $index++;
         }
 
         if (!empty($additional_features)) {
-            // Save as meta field (Houzez format)
             update_post_meta($post_id, 'additional_features', $additional_features);
-            error_log('RES DEBUG - Saved ' . count($additional_features) . ' additional features for post ' . $post_id);
-
-            // Log first few for debugging
-            foreach (array_slice($additional_features, 0, 3) as $feature) {
-                error_log('RES DEBUG - Feature: "' . $feature['fave_additional_feature_title'] . '" = "' . $feature['fave_additional_feature_value'] . '"');
-            }
-        } else {
-            error_log('RES DEBUG - No valid specifications to save for post ' . $post_id);
         }
     }
 
@@ -500,12 +465,10 @@ class Real_Estate_Scraper_Mapper
     private function set_location_taxonomies($post_id, $property_data)
     {
         if (!isset($property_data['geocoded_address']) || empty($property_data['geocoded_address'])) {
-            error_log('RES DEBUG - No geocoded address data for location taxonomies');
             return;
         }
 
         $address = $property_data['geocoded_address'];
-        error_log('RES DEBUG - Setting location taxonomies for post ' . $post_id);
 
         // Set Country taxonomy
         if (!empty($address['country'])) {
@@ -513,7 +476,6 @@ class Real_Estate_Scraper_Mapper
             $country_term = $this->get_or_create_term('property_country', $country_name);
             if ($country_term) {
                 wp_set_object_terms($post_id, array($country_term->term_id), 'property_country');
-                error_log('RES DEBUG - Set country: ' . $country_name . ' (ID: ' . $country_term->term_id . ')');
             }
         }
 
@@ -523,7 +485,6 @@ class Real_Estate_Scraper_Mapper
             $state_term = $this->get_or_create_term('property_state', $state_name);
             if ($state_term) {
                 wp_set_object_terms($post_id, array($state_term->term_id), 'property_state');
-                error_log('RES DEBUG - Set state: ' . $state_name . ' (ID: ' . $state_term->term_id . ')');
             }
         }
 
@@ -533,7 +494,6 @@ class Real_Estate_Scraper_Mapper
             $city_term = $this->get_or_create_term('property_city', $city_name);
             if ($city_term) {
                 wp_set_object_terms($post_id, array($city_term->term_id), 'property_city');
-                error_log('RES DEBUG - Set city: ' . $city_name . ' (ID: ' . $city_term->term_id . ')');
             }
         }
     }
