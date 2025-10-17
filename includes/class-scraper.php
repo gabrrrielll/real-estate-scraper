@@ -39,7 +39,7 @@ class Real_Estate_Scraper_Scraper
 
         try {
             error_log('=== SCRAPER STARTED ===');
-            
+
             $stats = array(
                 'total_found' => 0,
                 'new_added' => 0,
@@ -50,7 +50,7 @@ class Real_Estate_Scraper_Scraper
             // Global limit for total ads processed across all categories
             $max_ads_global = $this->options['max_ads_per_session'] ?? 4;
             $ads_processed_global = 0;
-            
+
             // Log configuration
             $category_count = count($this->options['category_urls']);
             $max_display = ($max_ads_global == 0) ? 'unlimited' : $max_ads_global;
@@ -96,7 +96,7 @@ class Real_Estate_Scraper_Scraper
                     $stats['errors'] += $category_stats['errors'];
 
                     $ads_processed_global += $category_stats['found'];
-                    
+
                     // Log progress
                     if ($max_ads_global > 0) {
                         $progress_status = ($ads_processed_global >= $max_ads_global) ? ' (LIMIT REACHED)' : '';
@@ -162,19 +162,35 @@ class Real_Estate_Scraper_Scraper
                 return $stats;
             }
 
-            // Process first property
-            $property_url = $property_urls[0];
-            $result = $this->process_property($property_url, $category_key);
+            // Try to find a new (non-duplicate) property from this category
+            // Limit attempts to avoid processing too many duplicates
+            $max_attempts = min(5, count($property_urls));
+            $attempt = 0;
 
-            if ($result['success']) {
-                $stats['found'] = 1;
-                if ($result['is_new']) {
-                    $stats['new'] = 1;
+            while ($attempt < $max_attempts && $stats['new'] == 0) {
+                $property_url = $property_urls[$attempt];
+                $result = $this->process_property($property_url, $category_key);
+
+                if ($result['success']) {
+                    if ($result['is_new']) {
+                        // Found a new property, increment counter and stop
+                        $stats['found'] = 1;
+                        $stats['new'] = 1;
+                        break;
+                    } else {
+                        // Duplicate found, try next one
+                        $stats['duplicates']++;
+                    }
                 } else {
-                    $stats['duplicates'] = 1;
+                    $stats['errors']++;
                 }
-            } else {
-                $stats['errors'] = 1;
+
+                $attempt++;
+            }
+
+            // If all attempts were duplicates or errors, no "found" increment
+            if ($stats['new'] == 0) {
+                error_log("[CATEGORY] {$category_upper} → No new ads found (checked {$attempt} ads: {$stats['duplicates']} duplicates, {$stats['errors']} errors)");
             }
 
         } catch (Exception $e) {
@@ -628,7 +644,7 @@ class Real_Estate_Scraper_Scraper
         $last_cat_upper = strtoupper($last_category);
         $next_cat_upper = strtoupper($next_category);
         error_log("[ROTATION] Last post: ID={$last_property->ID} ({$last_cat_upper}) → Next: {$next_cat_upper}");
-        
+
         return $next_category;
     }
 
