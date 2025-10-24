@@ -158,6 +158,14 @@ class Real_Estate_Scraper_Scraper
             $category_upper = strtoupper($category_key);
             error_log("[CATEGORY] {$category_upper} ({$url}) → " . count($property_urls) . " ads");
 
+            // Log all extracted URLs for debugging
+            if (!empty($property_urls)) {
+                error_log("[LINKS] Extracted " . count($property_urls) . " links from {$category_upper}:");
+                foreach ($property_urls as $index => $link) {
+                    error_log("  [{$index}] {$link}");
+                }
+            }
+
             if (empty($property_urls)) {
                 return $stats;
             }
