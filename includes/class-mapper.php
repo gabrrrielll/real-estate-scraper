@@ -141,6 +141,12 @@ class Real_Estate_Scraper_Mapper
             return;
         }
 
+        // Check if only one image exists and it's a placeholder
+        if (count($images) === 1 && stripos($images[0], 'placeholder') !== false) {
+            // Skip placeholder images - let our site use its own placeholder
+            return;
+        }
+
         $uploaded_images = array();
         $upload_dir = wp_upload_dir();
 
