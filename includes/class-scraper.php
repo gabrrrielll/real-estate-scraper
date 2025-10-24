@@ -378,16 +378,15 @@ class Real_Estate_Scraper_Scraper
         } catch (Exception $e) {
             // Enhanced error logging
             error_log("[ERROR] {$property_url}");
-            if (!empty($property_data)) {
+            // Check if extraction was successful by verifying title exists (main indicator)
+            if (!empty($property_data) && !empty($property_data['title'])) {
                 error_log("  → Extraction: OK");
-                if (!empty($property_data['title'])) {
-                    error_log("  → Title: \"{$property_data['title']}\"");
-                }
+                error_log("  → Title: \"{$property_data['title']}\"");
                 if (!empty($property_data['price'])) {
                     error_log("  → Price: \"{$property_data['price']}\"");
                 }
             } else {
-                error_log("  → Extraction: FAILED");
+                error_log("  → Extraction: FAILED (No title found - ad may be inactive/expired)");
             }
             error_log("  → Reason: " . $e->getMessage());
             return array('success' => false, 'error' => $e->getMessage());
