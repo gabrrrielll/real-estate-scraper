@@ -80,6 +80,51 @@ class Real_Estate_Scraper_Mapper
     }
 
     /**
+     * Update property text fields and meta from scraped data
+     */
+    public function update_property_text($post_id, $property_data)
+    {
+        $post_update = array('ID' => $post_id);
+        $has_update = false;
+
+        if (!empty($property_data['title'])) {
+            $post_update['post_title'] = $this->clean_title($property_data['title']);
+            $has_update = true;
+        }
+
+        if (!empty($property_data['content'])) {
+            $clean_content = $this->clean_content($property_data['content']);
+            $post_update['post_content'] = $clean_content;
+            $has_update = true;
+
+            if (strlen($clean_content) > 200) {
+                $post_update['post_excerpt'] = wp_trim_words($clean_content, 30);
+            }
+        }
+
+        if ($has_update) {
+            $result = wp_update_post($post_update, true);
+
+            if (is_wp_error($result)) {
+                throw new Exception('Failed to update post: ' . $result->get_error_message());
+            }
+        }
+
+        $this->set_property_meta($post_id, $property_data);
+        $this->save_dynamic_specifications($post_id, $property_data['specifications'] ?? array());
+        $this->set_location_taxonomies($post_id, $property_data);
+    }
+
+    /**
+     * Refresh property images with latest scraped data
+     */
+    public function refresh_property_images($post_id, $property_data)
+    {
+        $images = $property_data['images'] ?? array();
+        $this->handle_property_images($post_id, $images);
+    }
+
+    /**
      * Set property meta fields
      */
     private function set_property_meta($post_id, $property_data)

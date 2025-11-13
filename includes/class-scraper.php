@@ -606,6 +606,15 @@ class Real_Estate_Scraper_Scraper
             }
         }
 
+        if (!empty($specifications)) {
+            error_log('[SPECS RAW] Found ' . count($specifications) . ' items');
+            foreach ($specifications as $attribute => $value) {
+                error_log('  ' . $attribute . ': ' . $value);
+            }
+        } else {
+            error_log('[SPECS RAW] No specifications found');
+        }
+
         return $specifications;
     }
 
@@ -645,7 +654,24 @@ class Real_Estate_Scraper_Scraper
             }
         }
 
+        if (!empty($mapped)) {
+            error_log('[SPECS MAPPED] ' . count($mapped) . ' matches');
+            foreach ($mapped as $meta_key => $value) {
+                error_log('  ' . $meta_key . ': ' . $value);
+            }
+        } else {
+            error_log('[SPECS MAPPED] No matches found');
+        }
+
         return $mapped;
+    }
+
+    /**
+     * Fetch property data for admin refresh actions
+     */
+    public function fetch_property_data_for_admin($property_url)
+    {
+        return $this->fetch_property_data($property_url);
     }
 
     /**

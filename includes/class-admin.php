@@ -36,7 +36,178 @@ class Real_Estate_Scraper_Admin
 
         add_action('admin_post_res_save_settings', array($this, 'handle_save_settings'));
 
+        add_action('add_meta_boxes_property', array($this, 'register_property_tools_metabox'));
+        add_action('wp_ajax_res_refresh_property_text', array($this, 'ajax_refresh_property_text'));
+        add_action('wp_ajax_res_refresh_property_images', array($this, 'ajax_refresh_property_images'));
+
         // error_log('RES DEBUG - Admin class hooks added');
+    }
+
+    /**
+     * Register property metabox for scraper tools
+     */
+    public function register_property_tools_metabox()
+    {
+        add_meta_box(
+            'res-property-scraper-tools',
+            __('Real Estate Scraper Tools', 'real-estate-scraper'),
+            array($this, 'render_property_tools_metabox'),
+            'property',
+            'side',
+            'high'
+        );
+    }
+
+    /**
+     * Render metabox with original link and refresh buttons
+     */
+    public function render_property_tools_metabox($post)
+    {
+        $source_url = get_post_meta($post->ID, 'fave_property_source_url', true);
+        $nonce = wp_create_nonce('res_property_tools');
+        $is_disabled = empty($source_url);
+        ?>
+        <div id="res-property-tools-box">
+            <p>
+                <strong><?php esc_html_e('Original Listing URL', 'real-estate-scraper'); ?></strong><br>
+                <?php if ($source_url) : ?>
+                    <code style="word-break: break-all;"><?php echo esc_html($source_url); ?></code>
+                <?php else : ?>
+                    <em><?php esc_html_e('Not available', 'real-estate-scraper'); ?></em>
+                <?php endif; ?>
+            </p>
+            <p>
+                <a class="button button-secondary<?php echo $is_disabled ? ' disabled' : ''; ?>" href="<?php echo $source_url ? esc_url($source_url) : '#'; ?>" target="_blank" <?php echo $is_disabled ? 'aria-disabled="true"' : ''; ?>>
+                    <?php esc_html_e('Vezi anunțul original', 'real-estate-scraper'); ?>
+                </a>
+            </p>
+            <p>
+                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_text" <?php disabled($is_disabled, true); ?>>
+                    <?php esc_html_e('Extrage textele', 'real-estate-scraper'); ?>
+                </button>
+            </p>
+            <p>
+                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_images" <?php disabled($is_disabled, true); ?>>
+                    <?php esc_html_e('Extrage imaginile', 'real-estate-scraper'); ?>
+                </button>
+            </p>
+            <div class="res-property-tools-status" style="margin-top:10px;"></div>
+        </div>
+        <script type="text/javascript">
+            jQuery(function($) {
+                var nonce = '<?php echo esc_js($nonce); ?>';
+                var postId = <?php echo (int) $post->ID; ?>;
+                var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
+
+                $('#res-property-tools-box').on('click', '.res-property-btn', function(e) {
+                    e.preventDefault();
+
+                    var $button = $(this);
+                    var action = $button.data('action');
+                    var $status = $('#res-property-tools-box').find('.res-property-tools-status');
+
+                    $status.removeClass('updated error').text('<?php echo esc_js(__('Processing...', 'real-estate-scraper')); ?>');
+                    $button.prop('disabled', true).addClass('updating-message');
+
+                    $.post(ajaxUrl, {
+                        action: action,
+                        nonce: nonce,
+                        post_id: postId
+                    }).done(function(response) {
+                        if (response && response.success) {
+                            $status.addClass('updated').text(response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Operation completed successfully.', 'real-estate-scraper')); ?>');
+                        } else {
+                            var errorMessage = (response && response.data && response.data.message) ? response.data.message : '<?php echo esc_js(__('Operation failed.', 'real-estate-scraper')); ?>';
+                            $status.addClass('error').text(errorMessage);
+                        }
+                    }).fail(function() {
+                        $status.addClass('error').text('<?php echo esc_js(__('AJAX request failed.', 'real-estate-scraper')); ?>');
+                    }).always(function() {
+                        $button.prop('disabled', false).removeClass('updating-message');
+                    });
+                });
+            });
+        </script>
+        <?php
+    }
+
+    /**
+     * AJAX: Refresh property text content and meta
+     */
+    public function ajax_refresh_property_text()
+    {
+        check_ajax_referer('res_property_tools', 'nonce');
+
+        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+        if (!$post_id || !current_user_can('edit_post', $post_id)) {
+            wp_send_json_error(array('message' => __('Invalid request.', 'real-estate-scraper')));
+        }
+
+        try {
+            $property_data = $this->get_property_data_for_refresh($post_id);
+
+            if (empty($property_data)) {
+                throw new Exception(__('Failed to extract property data.', 'real-estate-scraper'));
+            }
+
+            $mapper = Real_Estate_Scraper_Mapper::get_instance();
+            $mapper->update_property_text($post_id, $property_data);
+
+            wp_send_json_success(array('message' => __('Text content updated successfully.', 'real-estate-scraper')));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => $e->getMessage()));
+        }
+    }
+
+    /**
+     * AJAX: Refresh property images
+     */
+    public function ajax_refresh_property_images()
+    {
+        check_ajax_referer('res_property_tools', 'nonce');
+
+        $post_id = isset($_POST['post_id']) ? intval($_POST['post_id']) : 0;
+
+        if (!$post_id || !current_user_can('edit_post', $post_id)) {
+            wp_send_json_error(array('message' => __('Invalid request.', 'real-estate-scraper')));
+        }
+
+        try {
+            $property_data = $this->get_property_data_for_refresh($post_id);
+
+            if (empty($property_data)) {
+                throw new Exception(__('Failed to extract property data.', 'real-estate-scraper'));
+            }
+
+            $mapper = Real_Estate_Scraper_Mapper::get_instance();
+            $mapper->refresh_property_images($post_id, $property_data);
+
+            wp_send_json_success(array('message' => __('Images updated successfully.', 'real-estate-scraper')));
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => $e->getMessage()));
+        }
+    }
+
+    /**
+     * Prepare property data for refresh actions
+     */
+    private function get_property_data_for_refresh($post_id)
+    {
+        $source_url = get_post_meta($post_id, 'fave_property_source_url', true);
+
+        if (empty($source_url)) {
+            throw new Exception(__('Source URL not found for this property.', 'real-estate-scraper'));
+        }
+
+        $scraper = Real_Estate_Scraper_Scraper::get_instance();
+        $property_data = $scraper->fetch_property_data_for_admin($source_url);
+
+        if (empty($property_data)) {
+            throw new Exception(__('Could not retrieve data from source URL.', 'real-estate-scraper'));
+        }
+
+        return $property_data;
     }
 
     /**
