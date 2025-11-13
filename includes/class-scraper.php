@@ -577,6 +577,7 @@ class Real_Estate_Scraper_Scraper
 
         // Extract specifications
         $property_data['specifications'] = $this->extract_specifications($xpath);
+        $property_data['mapped_specifications'] = $this->map_specifications_to_meta($property_data['specifications']);
 
         // Get geocoded address if we have coordinates
         if (!empty($property_data['latitude']) && !empty($property_data['longitude'])) {
@@ -606,6 +607,65 @@ class Real_Estate_Scraper_Scraper
         }
 
         return $specifications;
+    }
+
+    /**
+     * Map extracted specifications to Houzez meta fields
+     */
+    private function map_specifications_to_meta($specifications)
+    {
+        $mapped = array();
+
+        if (empty($specifications)) {
+            return $mapped;
+        }
+
+        $mapping_config = RES_SCRAPER_CONFIG['property_data']['specifications_mapping'] ?? array();
+
+        if (empty($mapping_config) || !is_array($mapping_config)) {
+            return $mapped;
+        }
+
+        // Normalize specification labels for comparison
+        $normalized_specs = array();
+        foreach ($specifications as $label => $value) {
+            $normalized_label = $this->normalize_spec_label($label);
+            $normalized_specs[$normalized_label] = $value;
+        }
+
+        foreach ($mapping_config as $meta_key => $mapping) {
+            $labels = $mapping['labels'] ?? array();
+
+            foreach ($labels as $label) {
+                $normalized_label = $this->normalize_spec_label($label);
+                if (isset($normalized_specs[$normalized_label])) {
+                    $mapped[$meta_key] = $normalized_specs[$normalized_label];
+                    break;
+                }
+            }
+        }
+
+        return $mapped;
+    }
+
+    /**
+     * Normalize specification label for matching
+     */
+    private function normalize_spec_label($label)
+    {
+        $normalized = trim($label);
+
+        if (function_exists('remove_accents')) {
+            $normalized = remove_accents($normalized);
+        }
+
+        if (function_exists('mb_strtolower')) {
+            $normalized = mb_strtolower($normalized);
+        } else {
+            $normalized = strtolower($normalized);
+        }
+
+        return $normalized;
     }
 
     /**

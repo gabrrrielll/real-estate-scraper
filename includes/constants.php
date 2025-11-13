@@ -40,6 +40,64 @@ define('RES_SCRAPER_CONFIG', array(
         'images_xpath' => '//div[contains(@class, "small-box-img")]//img[@src]',
         'phone_xpath' => '//p[@id="number-phone-active-format"]',
         'specifications_xpath' => '//p[@data-test-id="ad-attribute"]',
+        'specifications_mapping' => array(
+            'fave_property_size' => array(
+                'labels' => array(
+                    'Suprafața zonei',
+                    'Suprafata zonei',
+                    'Suprafață utilă',
+                    'Suprafata utila'
+                )
+            ),
+            'fave_land_area' => array(
+                'labels' => array(
+                    'Suprafața terenului',
+                    'Suprafata terenului'
+                )
+            ),
+            'fave_property_bedrooms' => array(
+                'labels' => array(
+                    'Dormitoare',
+                    'Număr dormitoare',
+                    'Numar dormitoare'
+                )
+            ),
+            'fave_property_bathrooms' => array(
+                'labels' => array(
+                    'Băi',
+                    'Bai',
+                    'Număr băi',
+                    'Numar bai'
+                )
+            ),
+            'fave_property_rooms' => array(
+                'labels' => array(
+                    'Camere',
+                    'Număr camere',
+                    'Numar camere'
+                )
+            ),
+            'fave_property_garages' => array(
+                'labels' => array(
+                    'Garaje',
+                    'Număr garaje',
+                    'Numar garaje'
+                )
+            ),
+            'fave_property_garage_size' => array(
+                'labels' => array(
+                    'Dimensiunea garajului',
+                    'Suprafața garajului',
+                    'Suprafata garajului'
+                )
+            ),
+            'fave_property_year_built' => array(
+                'labels' => array(
+                    'Anul construcției',
+                    'Anul constructiei'
+                )
+            )
+        ),
     ),
     'single_property_test_url' => 'https://homezz.ro/apartament-cu-incalzire-in-pardoseala-si-loc-de-parcare-in-b-3789471.html', // NEW: URL for testing single property parsing
     'base_url_for_relative_links' => 'https://homezz.ro', // Used for converting relative URLs to absolute. Update this if target site has relative links.

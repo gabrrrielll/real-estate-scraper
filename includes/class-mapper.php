@@ -90,11 +90,17 @@ class Real_Estate_Scraper_Mapper
             $map_location = $this->clean_coordinate($property_data['latitude']) . ',' . $this->clean_coordinate($property_data['longitude']);
         }
 
+        $mapped_specs = $property_data['mapped_specifications'] ?? array();
+
         $meta_fields = array(
             'fave_property_price' => $this->clean_price($property_data['price']),
-            'fave_property_size' => $this->clean_size($property_data['size']),
-            'fave_property_bedrooms' => $this->clean_number($property_data['bedrooms']),
-            'fave_property_bathrooms' => $this->clean_number($property_data['bathrooms']),
+            'fave_property_size' => $this->clean_size($mapped_specs['fave_property_size'] ?? $property_data['size']),
+            'fave_land_area' => $this->clean_size($mapped_specs['fave_land_area'] ?? ''),
+            'fave_property_bedrooms' => $this->clean_number($mapped_specs['fave_property_bedrooms'] ?? $property_data['bedrooms']),
+            'fave_property_bathrooms' => $this->clean_number($mapped_specs['fave_property_bathrooms'] ?? $property_data['bathrooms']),
+            'fave_property_rooms' => $this->clean_number($mapped_specs['fave_property_rooms'] ?? ''),
+            'fave_property_garages' => $this->clean_number($mapped_specs['fave_property_garages'] ?? ''),
+            'fave_property_garage_size' => $this->clean_size($mapped_specs['fave_property_garage_size'] ?? ''),
             'fave_property_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_address' => $this->get_geocoded_address_for_save($property_data),
             'fave_property_map_latitude' => $this->clean_coordinate($property_data['latitude']),
@@ -102,7 +108,8 @@ class Real_Estate_Scraper_Mapper
             'fave_property_location' => $map_location, // NEW: Add coordinates for map display
             'fave_property_source_url' => $property_data['source_url'],
             'fave_private_note' => 'Vezi anuntul original aici: @' . $property_data['source_url'],
-            'fave_telefon-proprietar' => trim($property_data['phone_number'] ?? '') // NEW: Add phone number
+            'fave_telefon-proprietar' => trim($property_data['phone_number'] ?? ''), // NEW: Add phone number
+            'fave_property_year_built' => $this->clean_number($mapped_specs['fave_property_year_built'] ?? '')
         );
 
         foreach ($meta_fields as $key => $value) {
