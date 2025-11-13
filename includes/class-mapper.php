@@ -193,11 +193,21 @@ class Real_Estate_Scraper_Mapper
             return;
         }
 
-        // Check if only one image exists and it's a placeholder
-        if (count($images) === 1 && stripos($images[0], 'placeholder') !== false) {
-            // Skip placeholder images - let our site use its own placeholder
+        // Skip if all available images are placeholders (single or multiple duplicates)
+        $placeholder_count = 0;
+        foreach ($images as $image_url) {
+            if (stripos($image_url, 'placeholder') !== false) {
+                $placeholder_count++;
+            }
+        }
+
+        if ($placeholder_count > 0 && $placeholder_count === count($images)) {
+            // All images are placeholders - let the site use its own placeholder
             return;
         }
+
+        // Remove duplicate URLs before processing
+        $images = array_values(array_unique($images));
 
         $uploaded_images = array();
         $upload_dir = wp_upload_dir();
