@@ -98,7 +98,7 @@ define('RES_SCRAPER_CONFIG', array(
                     'Suprafata garajului'
                 )
             ),
-            'fave_property_year_built' => array(
+            'fave_property_year' => array(
                 'type' => 'number',
                 'labels' => array(
                     'Anul construcției',

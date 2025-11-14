@@ -159,7 +159,7 @@ class Real_Estate_Scraper_Mapper
             'fave_property_source_url' => $property_data['source_url'],
             'fave_private_note' => 'Vezi anuntul original aici: @' . $property_data['source_url'],
             'fave_telefon-proprietar' => trim($property_data['phone_number'] ?? ''), // NEW: Add phone number
-            'fave_property_year_built' => $this->clean_number($mapped_specs['fave_property_year_built'] ?? '')
+            'fave_property_year' => $this->clean_number($mapped_specs['fave_property_year'] ?? '')
         );
 
         foreach ($meta_fields as $key => $value) {
