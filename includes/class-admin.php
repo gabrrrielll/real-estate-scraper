@@ -39,6 +39,7 @@ class Real_Estate_Scraper_Admin
         add_action('add_meta_boxes_property', array($this, 'register_property_tools_metabox'));
         add_action('wp_ajax_res_refresh_property_text', array($this, 'ajax_refresh_property_text'));
         add_action('wp_ajax_res_refresh_property_images', array($this, 'ajax_refresh_property_images'));
+        add_action('save_post_property', array($this, 'save_property_source_url'));
 
         // error_log('RES DEBUG - Admin class hooks added');
     }
@@ -65,29 +66,25 @@ class Real_Estate_Scraper_Admin
     {
         $source_url = get_post_meta($post->ID, 'fave_property_source_url', true);
         $nonce = wp_create_nonce('res_property_tools');
-        $is_disabled = empty($source_url);
+        wp_nonce_field('res_property_tools_save', 'res_property_tools_nonce');
         ?>
         <div id="res-property-tools-box">
             <p>
                 <strong><?php esc_html_e('Original Listing URL', 'real-estate-scraper'); ?></strong><br>
-                <?php if ($source_url) : ?>
-                    <code style="word-break: break-all;"><?php echo esc_html($source_url); ?></code>
-                <?php else : ?>
-                    <em><?php esc_html_e('Not available', 'real-estate-scraper'); ?></em>
-                <?php endif; ?>
+                <textarea name="res_property_source_url" id="res-property-source-url" rows="3" style="width:100%;"><?php echo esc_textarea($source_url); ?></textarea>
             </p>
             <p>
-                <a class="button button-secondary<?php echo $is_disabled ? ' disabled' : ''; ?>" href="<?php echo $source_url ? esc_url($source_url) : '#'; ?>" target="_blank" <?php echo $is_disabled ? 'aria-disabled="true"' : ''; ?>>
+                <button type="button" class="button button-secondary res-view-original">
                     <?php esc_html_e('Vezi anunțul original', 'real-estate-scraper'); ?>
-                </a>
+                </button>
             </p>
             <p>
-                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_text" <?php disabled($is_disabled, true); ?>>
+                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_text">
                     <?php esc_html_e('Extrage textele', 'real-estate-scraper'); ?>
                 </button>
             </p>
             <p>
-                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_images" <?php disabled($is_disabled, true); ?>>
+                <button type="button" class="button button-primary res-property-btn" data-action="res_refresh_property_images">
                     <?php esc_html_e('Extrage imaginile', 'real-estate-scraper'); ?>
                 </button>
             </p>
@@ -98,13 +95,30 @@ class Real_Estate_Scraper_Admin
                 var nonce = '<?php echo esc_js($nonce); ?>';
                 var postId = <?php echo (int) $post->ID; ?>;
                 var ajaxUrl = '<?php echo esc_url(admin_url('admin-ajax.php')); ?>';
+                var $sourceInput = $('#res-property-source-url');
+
+                $('#res-property-tools-box').on('click', '.res-view-original', function(e) {
+                    e.preventDefault();
+                    var url = $sourceInput.val().trim();
+                    if (url) {
+                        window.open(url, '_blank');
+                    } else {
+                        alert('<?php echo esc_js(__('Link indisponibil. Adăugați mai întâi URL-ul.', 'real-estate-scraper')); ?>');
+                    }
+                });
 
                 $('#res-property-tools-box').on('click', '.res-property-btn', function(e) {
                     e.preventDefault();
 
                     var $button = $(this);
+                    var sourceUrl = $sourceInput.val().trim();
                     var action = $button.data('action');
                     var $status = $('#res-property-tools-box').find('.res-property-tools-status');
+
+                    if (!sourceUrl) {
+                        $status.addClass('error').text('<?php echo esc_js(__('Introduceți URL-ul anunțului înainte de a continua.', 'real-estate-scraper')); ?>');
+                        return;
+                    }
 
                     $status.removeClass('updated error').text('<?php echo esc_js(__('Processing...', 'real-estate-scraper')); ?>');
                     $button.prop('disabled', true).addClass('updating-message');
@@ -112,7 +126,8 @@ class Real_Estate_Scraper_Admin
                     $.post(ajaxUrl, {
                         action: action,
                         nonce: nonce,
-                        post_id: postId
+                        post_id: postId,
+                        source_url: sourceUrl
                     }).done(function(response) {
                         if (response && response.success) {
                             $status.addClass('updated').text(response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Operation completed successfully.', 'real-estate-scraper')); ?>');
@@ -145,7 +160,8 @@ class Real_Estate_Scraper_Admin
         }
 
         try {
-            $property_data = $this->get_property_data_for_refresh($post_id);
+            $source_input = isset($_POST['source_url']) ? esc_url_raw(trim($_POST['source_url'])) : '';
+            $property_data = $this->get_property_data_for_refresh($post_id, $source_input);
 
             if (empty($property_data)) {
                 throw new Exception(__('Failed to extract property data.', 'real-estate-scraper'));
@@ -174,7 +190,8 @@ class Real_Estate_Scraper_Admin
         }
 
         try {
-            $property_data = $this->get_property_data_for_refresh($post_id);
+            $source_input = isset($_POST['source_url']) ? esc_url_raw(trim($_POST['source_url'])) : '';
+            $property_data = $this->get_property_data_for_refresh($post_id, $source_input);
 
             if (empty($property_data)) {
                 throw new Exception(__('Failed to extract property data.', 'real-estate-scraper'));
@@ -192,9 +209,18 @@ class Real_Estate_Scraper_Admin
     /**
      * Prepare property data for refresh actions
      */
-    private function get_property_data_for_refresh($post_id)
+    private function get_property_data_for_refresh($post_id, $override_url = '')
     {
-        $source_url = get_post_meta($post_id, 'fave_property_source_url', true);
+        $source_url = '';
+
+        if (!empty($override_url)) {
+            if (!filter_var($override_url, FILTER_VALIDATE_URL)) {
+                throw new Exception(__('Invalid URL provided.', 'real-estate-scraper'));
+            }
+            $source_url = $override_url;
+        } else {
+            $source_url = get_post_meta($post_id, 'fave_property_source_url', true);
+        }
 
         if (empty($source_url)) {
             throw new Exception(__('Source URL not found for this property.', 'real-estate-scraper'));
@@ -207,7 +233,38 @@ class Real_Estate_Scraper_Admin
             throw new Exception(__('Could not retrieve data from source URL.', 'real-estate-scraper'));
         }
 
+        $property_data['source_url'] = $source_url;
+        update_post_meta($post_id, 'fave_property_source_url', $source_url);
+
         return $property_data;
+    }
+
+    /**
+     * Save property source URL from metabox
+     */
+    public function save_property_source_url($post_id)
+    {
+        if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
+            return;
+        }
+
+        if (!isset($_POST['res_property_tools_nonce']) || !wp_verify_nonce($_POST['res_property_tools_nonce'], 'res_property_tools_save')) {
+            return;
+        }
+
+        if (!current_user_can('edit_post', $post_id)) {
+            return;
+        }
+
+        if (isset($_POST['res_property_source_url'])) {
+            $source_url = esc_url_raw(trim($_POST['res_property_source_url']));
+
+            if (!empty($source_url)) {
+                update_post_meta($post_id, 'fave_property_source_url', $source_url);
+            } else {
+                delete_post_meta($post_id, 'fave_property_source_url');
+            }
+        }
     }
 
     /**
