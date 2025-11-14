@@ -36,6 +36,17 @@ class Real_Estate_Scraper_Mapper
     public function create_property_post($property_data, $category_key)
     {
         try {
+            $property_type_id = intval($this->options['category_mapping'][$category_key] ?? 0);
+            $property_status_id = intval($this->options['category_status_mapping'][$category_key] ?? 0);
+
+            $tax_input = array();
+            if ($property_type_id > 0) {
+                $tax_input['property_type'] = array($property_type_id);
+            }
+            if ($property_status_id > 0) {
+                $tax_input['property_status'] = array($property_status_id);
+            }
+
             // Prepare post data
             $post_data = array(
                 'post_title' => $this->clean_title($property_data['title']),
@@ -45,6 +56,10 @@ class Real_Estate_Scraper_Mapper
                 'post_author' => 1, // Admin user
                 'meta_input' => array()
             );
+
+            if (!empty($tax_input)) {
+                $post_data['tax_input'] = $tax_input;
+            }
 
             // Set excerpt if content is too long
             if (strlen($post_data['post_content']) > 200) {
