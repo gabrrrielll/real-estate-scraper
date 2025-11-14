@@ -110,9 +110,14 @@ class Real_Estate_Scraper_Mapper
             }
         }
 
-        $this->set_property_meta($post_id, $property_data);
+        $meta_changes = $this->set_property_meta($post_id, $property_data);
         $this->save_dynamic_specifications($post_id, $property_data['specifications'] ?? array());
         $this->set_location_taxonomies($post_id, $property_data);
+
+        return array(
+            'meta' => $meta_changes,
+            'specifications' => $property_data['specifications'] ?? array()
+        );
     }
 
     /**
@@ -158,8 +163,10 @@ class Real_Estate_Scraper_Mapper
         );
 
         foreach ($meta_fields as $key => $value) {
-            if (!empty($value)) {
+            if ($value !== '' && $value !== null) {
                 update_post_meta($post_id, $key, $value);
+            } else {
+                delete_post_meta($post_id, $key);
             }
         }
 
@@ -167,6 +174,8 @@ class Real_Estate_Scraper_Mapper
         update_post_meta($post_id, 'fave_featured', 0); // Not featured by default
         update_post_meta($post_id, 'fave_property_map', 1); // Show map by default
         update_post_meta($post_id, 'fave_property_map_street_view', 'show'); // Show street view
+
+        return $meta_fields;
     }
 
     /**

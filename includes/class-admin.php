@@ -131,6 +131,14 @@ class Real_Estate_Scraper_Admin
                     }).done(function(response) {
                         if (response && response.success) {
                             $status.addClass('updated').text(response.data && response.data.message ? response.data.message : '<?php echo esc_js(__('Operation completed successfully.', 'real-estate-scraper')); ?>');
+                            if (response.data && response.data.meta) {
+                                $.each(response.data.meta, function(metaKey, metaValue) {
+                                    var $field = $('[name="' + metaKey + '"]');
+                                    if ($field.length) {
+                                        $field.val(metaValue);
+                                    }
+                                });
+                            }
                         } else {
                             var errorMessage = (response && response.data && response.data.message) ? response.data.message : '<?php echo esc_js(__('Operation failed.', 'real-estate-scraper')); ?>';
                             $status.addClass('error').text(errorMessage);
@@ -168,9 +176,13 @@ class Real_Estate_Scraper_Admin
             }
 
             $mapper = Real_Estate_Scraper_Mapper::get_instance();
-            $mapper->update_property_text($post_id, $property_data);
+            $result = $mapper->update_property_text($post_id, $property_data);
 
-            wp_send_json_success(array('message' => __('Text content updated successfully.', 'real-estate-scraper')));
+            wp_send_json_success(array(
+                'message' => __('Text content updated successfully.', 'real-estate-scraper'),
+                'meta' => $result['meta'] ?? array(),
+                'specifications' => $result['specifications'] ?? array()
+            ));
         } catch (Exception $e) {
             wp_send_json_error(array('message' => $e->getMessage()));
         }
