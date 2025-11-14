@@ -145,7 +145,9 @@ class Real_Estate_Scraper_Mapper
         $meta_fields = array(
             'fave_property_price' => $this->clean_price($property_data['price']),
             'fave_property_size' => $this->clean_size($mapped_specs['fave_property_size'] ?? $property_data['size']),
+            'fave_property_size_prefix' => 'mp',
             'fave_land_area' => $this->clean_size($mapped_specs['fave_land_area'] ?? ''),
+            'fave_property_land_postfix' => 'mp',
             'fave_property_bedrooms' => $this->clean_number($mapped_specs['fave_property_bedrooms'] ?? $property_data['bedrooms']),
             'fave_property_bathrooms' => $this->clean_number($mapped_specs['fave_property_bathrooms'] ?? $property_data['bathrooms']),
             'fave_property_rooms' => $this->clean_number($mapped_specs['fave_property_rooms'] ?? ''),
