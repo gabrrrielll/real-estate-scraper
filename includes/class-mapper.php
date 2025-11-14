@@ -379,10 +379,7 @@ class Real_Estate_Scraper_Mapper
      */
     private function clean_price($price)
     {
-        $price = trim($price);
-        $price = preg_replace('/[^\d.,€EUR]/', '', $price);
-
-        return $price;
+        return $this->normalize_numeric_value($price, false);
     }
 
     /**
@@ -390,10 +387,7 @@ class Real_Estate_Scraper_Mapper
      */
     private function clean_size($size)
     {
-        $size = trim($size);
-        $size = preg_replace('/[^\d.,mp²sq]/i', '', $size);
-
-        return $size;
+        return $this->normalize_numeric_value($size, true);
     }
 
     /**
@@ -401,8 +395,44 @@ class Real_Estate_Scraper_Mapper
      */
     private function clean_number($number)
     {
-        $number = trim($number);
-        $number = preg_replace('/[^\d]/', '', $number);
+        return $this->normalize_numeric_value($number, false);
+    }
+
+    /**
+     * Normalize numeric string (remove units/currency)
+     */
+    private function normalize_numeric_value($value, $allow_decimal = true)
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if (!preg_match('/\d+(?:[.,]\d+)?/', $value, $matches)) {
+            return '';
+        }
+
+        $number = $matches[0];
+        $number = str_replace(' ', '', $number);
+
+        if ($allow_decimal) {
+            $number = str_replace(',', '.', $number);
+            $last_dot = strrpos($number, '.');
+
+            if ($last_dot !== false) {
+                $integer_part = substr($number, 0, $last_dot);
+                $decimal_part = substr($number, $last_dot + 1);
+                $integer_part = str_replace('.', '', $integer_part);
+                $decimal_part = str_replace('.', '', $decimal_part);
+                $number = $integer_part . '.' . $decimal_part;
+            } else {
+                $number = str_replace('.', '', $number);
+            }
+        } else {
+            $number = str_replace(array('.', ','), '', $number);
+            $number = preg_replace('/[^\d]/', '', $number);
+        }
 
         return $number;
     }

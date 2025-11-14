@@ -42,6 +42,7 @@ define('RES_SCRAPER_CONFIG', array(
         'specifications_xpath' => '//p[@data-test-id="ad-attribute"]',
         'specifications_mapping' => array(
             'fave_property_size' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Suprafața zonei',
                     'Suprafata zonei',
@@ -50,12 +51,14 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_land_area' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Suprafața terenului',
                     'Suprafata terenului'
                 )
             ),
             'fave_property_bedrooms' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Dormitoare',
                     'Număr dormitoare',
@@ -63,6 +66,7 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_property_bathrooms' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Băi',
                     'Bai',
@@ -71,6 +75,7 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_property_rooms' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Camere',
                     'Număr camere',
@@ -78,6 +83,7 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_property_garages' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Garaje',
                     'Număr garaje',
@@ -85,6 +91,7 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_property_garage_size' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Dimensiunea garajului',
                     'Suprafața garajului',
@@ -92,9 +99,11 @@ define('RES_SCRAPER_CONFIG', array(
                 )
             ),
             'fave_property_year_built' => array(
+                'type' => 'number',
                 'labels' => array(
                     'Anul construcției',
-                    'Anul constructiei'
+                    'Anul constructiei',
+                    'An finalizare construcție'
                 )
             )
         ),

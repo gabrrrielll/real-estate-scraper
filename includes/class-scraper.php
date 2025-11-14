@@ -644,11 +644,16 @@ class Real_Estate_Scraper_Scraper
 
         foreach ($mapping_config as $meta_key => $mapping) {
             $labels = $mapping['labels'] ?? array();
+            $type = $mapping['type'] ?? 'string';
 
             foreach ($labels as $label) {
                 $normalized_label = $this->normalize_spec_label($label);
                 if (isset($normalized_specs[$normalized_label])) {
-                    $mapped[$meta_key] = $normalized_specs[$normalized_label];
+                    $value = $this->normalize_spec_value($normalized_specs[$normalized_label], $type);
+                    if ($value === '') {
+                        continue;
+                    }
+                    $mapped[$meta_key] = $value;
                     break;
                 }
             }
@@ -692,6 +697,58 @@ class Real_Estate_Scraper_Scraper
         }
 
         return $normalized;
+    }
+
+    /**
+     * Normalize specification value based on type
+     */
+    private function normalize_spec_value($value, $type = 'string')
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            return '';
+        }
+
+        if ($type === 'number') {
+            $numeric = $this->extract_numeric_value($value, true);
+            return $numeric;
+        }
+
+        return $value;
+    }
+
+    /**
+     * Extract numeric value from string
+     */
+    private function extract_numeric_value($value, $allow_decimal = true)
+    {
+        if (!preg_match('/\d+(?:[.,]\d+)?/', $value, $matches)) {
+            return '';
+        }
+
+        $number = $matches[0];
+        $number = str_replace(' ', '', $number);
+
+        if ($allow_decimal) {
+            $number = str_replace(',', '.', $number);
+            $last_dot = strrpos($number, '.');
+
+            if ($last_dot !== false) {
+                $integer_part = substr($number, 0, $last_dot);
+                $decimal_part = substr($number, $last_dot + 1);
+                $integer_part = str_replace('.', '', $integer_part);
+                $decimal_part = str_replace('.', '', $decimal_part);
+                $number = $integer_part . '.' . $decimal_part;
+            } else {
+                $number = str_replace('.', '', $number);
+            }
+        } else {
+            $number = str_replace(array('.', ','), '', $number);
+            $number = preg_replace('/[^\d]/', '', $number);
+        }
+
+        return $number;
     }
 
     /**
