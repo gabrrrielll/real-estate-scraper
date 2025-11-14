@@ -26,6 +26,8 @@ class Real_Estate_Scraper_Mapper
     {
         $this->logger = Real_Estate_Scraper_Logger::get_instance();
         $this->options = get_option('real_estate_scraper_options', array());
+        $this->options['category_mapping'] = $this->options['category_mapping'] ?? array();
+        $this->options['category_status_mapping'] = $this->options['category_status_mapping'] ?? array();
     }
 
     /**
@@ -191,6 +193,15 @@ class Real_Estate_Scraper_Mapper
             $type_term = get_term_by('id', $property_type, 'property_type');
             if ($type_term) {
                 wp_set_post_terms($post_id, array($type_term->term_id), 'property_type');
+            }
+        }
+
+        // Set property status based on category mapping
+        $property_status = $this->options['category_status_mapping'][$category_key] ?? '';
+        if (!empty($property_status)) {
+            $status_term = get_term_by('id', $property_status, 'property_status');
+            if ($status_term) {
+                wp_set_post_terms($post_id, array($status_term->term_id), 'property_status');
             }
         }
     }

@@ -407,6 +407,27 @@ class Real_Estate_Scraper_Admin
             $property_types = array();
         }
 
+        // Get property statuses for mapping
+        $property_statuses = get_terms(array(
+            'taxonomy' => 'property_status',
+            'hide_empty' => false
+        ));
+
+        if (is_wp_error($property_statuses)) {
+            $property_statuses = array();
+        }
+
+        $category_labels = array(
+            'apartamente' => __('Apartamente', 'real-estate-scraper'),
+            'garsoniere' => __('Garsoniere', 'real-estate-scraper'),
+            'case_vile' => __('Case/Vile', 'real-estate-scraper'),
+            'spatii_comerciale' => __('Spații Comerciale', 'real-estate-scraper')
+        );
+
+        $category_urls = $options['category_urls'] ?? array();
+        $category_type_mapping = $options['category_mapping'] ?? array();
+        $category_status_mapping = $options['category_status_mapping'] ?? array();
+
         // Get cron info
         $cron = Real_Estate_Scraper_Cron::get_instance();
         $next_run = $cron->get_next_run_time();
@@ -425,118 +446,53 @@ class Real_Estate_Scraper_Admin
                 <?php wp_nonce_field('res_save_settings', 'res_nonce'); ?>
                         
                         <div class="res-settings-section">
-                            <h2><?php _e('Category URLs', 'real-estate-scraper'); ?></h2>
-                            <p class="description"><?php _e('Enter the URLs for each category to scrape.', 'real-estate-scraper'); ?></p>
-                            
-                            <table class="form-table">
-                                <tr>
-                                    <th scope="row"><?php _e('Apartamente', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <input type="url" name="category_urls[apartamente]" 
-                                               value="<?php echo esc_attr($options['category_urls']['apartamente'] ?? ''); ?>" 
-                                               class="regular-text" />
-                                    </td>
-                                </tr>
-                                <?php
-                                // /*
-        ?>
-                                <tr>
-                                    <th scope="row"><?php _e('Garsoniere', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <input type="url" name="category_urls[garsoniere]" 
-                                               value="<?php echo esc_attr($options['category_urls']['garsoniere'] ?? ''); ?>" 
-                                               class="regular-text" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Case/Vile', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <input type="url" name="category_urls[case_vile]" 
-                                               value="<?php echo esc_attr($options['category_urls']['case_vile'] ?? ''); ?>" 
-                                               class="regular-text" />
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Spații Comerciale', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <input type="url" name="category_urls[spatii_comerciale]" 
-                                               value="<?php echo esc_attr($options['category_urls']['spatii_comerciale'] ?? ''); ?>" 
-                                               class="regular-text" />
-                                    </td>
-                                </tr>
-                                <?php
-        // */
-        ?>
-                            </table>
-                        </div>
-                        
-                        <div class="res-settings-section">
-                            <h2><?php _e('Category Mapping', 'real-estate-scraper'); ?></h2>
-                            <p class="description"><?php _e('Map each category to a property type.', 'real-estate-scraper'); ?></p>
-                            
-                            <table class="form-table">
-                                <?php
-        // /*
-        ?>
-                                <tr>
-                                    <th scope="row"><?php _e('Apartamente', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <select name="category_mapping[apartamente]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['apartamente'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Garsoniere', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <select name="category_mapping[garsoniere]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['garsoniere'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Case/Vile', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <select name="category_mapping[case_vile]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['case_vile'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <th scope="row"><?php _e('Spații Comerciale', 'real-estate-scraper'); ?></th>
-                                    <td>
-                                        <select name="category_mapping[spatii_comerciale]">
-                                            <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
-                                            <?php foreach ($property_types as $type): ?>
-                                                <option value="<?php echo $type->term_id; ?>" 
-                                                        <?php selected($options['category_mapping']['spatii_comerciale'] ?? '', $type->term_id); ?>>
-                                                    <?php echo esc_html($type->name); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                    </td>
-                                </tr>
-                                <?php
-        // */
-        ?>
+                            <h2><?php _e('Category Configuration', 'real-estate-scraper'); ?></h2>
+                            <p class="description"><?php _e('Configure the source URL and taxonomy mapping for each category.', 'real-estate-scraper'); ?></p>
+
+                            <table class="widefat fixed striped res-category-config-table">
+                                <thead>
+                                    <tr>
+                                        <th><?php _e('Category', 'real-estate-scraper'); ?></th>
+                                        <th><?php _e('Category URL', 'real-estate-scraper'); ?></th>
+                                        <th><?php _e('Type Mapping', 'real-estate-scraper'); ?></th>
+                                        <th><?php _e('Status Mapping', 'real-estate-scraper'); ?></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <?php foreach ($category_labels as $category_key => $category_label) : ?>
+                                        <tr>
+                                            <th scope="row"><?php echo esc_html($category_label); ?></th>
+                                            <td>
+                                                <input type="url"
+                                                       name="category_urls[<?php echo esc_attr($category_key); ?>]"
+                                                       value="<?php echo esc_attr($category_urls[$category_key] ?? ''); ?>"
+                                                       class="regular-text" />
+                                            </td>
+                                            <td>
+                                                <select name="category_mapping[<?php echo esc_attr($category_key); ?>]">
+                                                    <option value=""><?php _e('Select Property Type', 'real-estate-scraper'); ?></option>
+                                                    <?php foreach ($property_types as $type) : ?>
+                                                        <option value="<?php echo esc_attr($type->term_id); ?>"
+                                                            <?php selected(intval($category_type_mapping[$category_key] ?? 0), $type->term_id); ?>>
+                                                            <?php echo esc_html($type->name); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </td>
+                                            <td>
+                                                <select name="category_status_mapping[<?php echo esc_attr($category_key); ?>]">
+                                                    <option value=""><?php _e('Select Status', 'real-estate-scraper'); ?></option>
+                                                    <?php foreach ($property_statuses as $status) : ?>
+                                                        <option value="<?php echo esc_attr($status->term_id); ?>"
+                                                            <?php selected(intval($category_status_mapping[$category_key] ?? 0), $status->term_id); ?>>
+                                                            <?php echo esc_html($status->name); ?>
+                                                        </option>
+                                                    <?php endforeach; ?>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
                             </table>
                         </div>
                         
@@ -692,12 +648,16 @@ class Real_Estate_Scraper_Admin
         $post_properties_to_check = isset($_POST['properties_to_check']) ? intval($_POST['properties_to_check']) : 10;
         $post_default_status = isset($_POST['default_status']) ? $_POST['default_status'] : 'draft';
         $post_enable_cron = isset($_POST['enable_cron']) ? 1 : 0;
+        $post_category_mapping = isset($_POST['category_mapping']) ? array_map('intval', $_POST['category_mapping']) : [];
+        $post_category_status_mapping = isset($_POST['category_status_mapping']) ? array_map('intval', $_POST['category_status_mapping']) : [];
 
         $db_category_urls = $options['category_urls'] ?? [];
         $db_cron_interval = $options['cron_interval'] ?? 'hourly';
         $db_properties_to_check = $options['properties_to_check'] ?? 10;
         $db_default_status = $options['default_status'] ?? 'draft';
         $db_enable_cron = $options['enable_cron'] ?? 0;
+        $db_category_mapping = $options['category_mapping'] ?? [];
+        $db_category_status_mapping = $options['category_status_mapping'] ?? [];
 
         $save_successful = (
             (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente']) &&
@@ -707,7 +667,15 @@ class Real_Estate_Scraper_Admin
             ($post_properties_to_check == $db_properties_to_check) &&
             ($post_cron_interval == $db_cron_interval) &&
             ($post_default_status == $db_default_status) &&
-            ($post_enable_cron == $db_enable_cron)
+            ($post_enable_cron == $db_enable_cron) &&
+            (intval($post_category_mapping['apartamente'] ?? 0) === intval($db_category_mapping['apartamente'] ?? 0)) &&
+            (intval($post_category_mapping['garsoniere'] ?? 0) === intval($db_category_mapping['garsoniere'] ?? 0)) &&
+            (intval($post_category_mapping['case_vile'] ?? 0) === intval($db_category_mapping['case_vile'] ?? 0)) &&
+            (intval($post_category_mapping['spatii_comerciale'] ?? 0) === intval($db_category_mapping['spatii_comerciale'] ?? 0)) &&
+            (intval($post_category_status_mapping['apartamente'] ?? 0) === intval($db_category_status_mapping['apartamente'] ?? 0)) &&
+            (intval($post_category_status_mapping['garsoniere'] ?? 0) === intval($db_category_status_mapping['garsoniere'] ?? 0)) &&
+            (intval($post_category_status_mapping['case_vile'] ?? 0) === intval($db_category_status_mapping['case_vile'] ?? 0)) &&
+            (intval($post_category_status_mapping['spatii_comerciale'] ?? 0) === intval($db_category_status_mapping['spatii_comerciale'] ?? 0))
         );
 
         if ($save_successful) {
@@ -760,6 +728,16 @@ class Real_Estate_Scraper_Admin
                 'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
                 'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
                 'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
+            );
+        }
+
+        // Sanitize category status mapping
+        if (isset($_POST['category_status_mapping']) && is_array($_POST['category_status_mapping'])) {
+            $options['category_status_mapping'] = array(
+                'apartamente' => isset($_POST['category_status_mapping']['apartamente']) ? intval($_POST['category_status_mapping']['apartamente']) : 0,
+                'garsoniere' => isset($_POST['category_status_mapping']['garsoniere']) ? intval($_POST['category_status_mapping']['garsoniere']) : 0,
+                'case_vile' => isset($_POST['category_status_mapping']['case_vile']) ? intval($_POST['category_status_mapping']['case_vile']) : 0,
+                'spatii_comerciale' => isset($_POST['category_status_mapping']['spatii_comerciale']) ? intval($_POST['category_status_mapping']['spatii_comerciale']) : 0
             );
         }
 

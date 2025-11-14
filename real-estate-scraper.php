@@ -130,6 +130,12 @@ class Real_Estate_Scraper
                 'case_vile' => '',
                 'spatii_comerciale' => ''
             ),
+            'category_status_mapping' => array(
+                'apartamente' => '',
+                'garsoniere' => '',
+                'case_vile' => '',
+                'spatii_comerciale' => ''
+            ),
             'cron_interval' => 'hourly',
             'properties_to_check' => 10,
             'max_ads_per_session' => 4,
