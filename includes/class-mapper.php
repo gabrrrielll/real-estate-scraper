@@ -188,21 +188,15 @@ class Real_Estate_Scraper_Mapper
     private function set_property_taxonomies($post_id, $category_key)
     {
         // Set property type based on category mapping
-        $property_type = $this->options['category_mapping'][$category_key] ?? '';
-        if (!empty($property_type)) {
-            $type_term = get_term_by('id', $property_type, 'property_type');
-            if ($type_term) {
-                wp_set_post_terms($post_id, array($type_term->term_id), 'property_type');
-            }
+        $property_type = intval($this->options['category_mapping'][$category_key] ?? 0);
+        if ($property_type > 0) {
+            wp_set_post_terms($post_id, array($property_type), 'property_type', false);
         }
 
         // Set property status based on category mapping
-        $property_status = $this->options['category_status_mapping'][$category_key] ?? '';
-        if (!empty($property_status)) {
-            $status_term = get_term_by('id', $property_status, 'property_status');
-            if ($status_term) {
-                wp_set_post_terms($post_id, array($status_term->term_id), 'property_status');
-            }
+        $property_status = intval($this->options['category_status_mapping'][$category_key] ?? 0);
+        if ($property_status > 0) {
+            wp_set_post_terms($post_id, array($property_status), 'property_status', false);
         }
     }
 
