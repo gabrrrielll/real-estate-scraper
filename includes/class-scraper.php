@@ -64,6 +64,11 @@ class Real_Estate_Scraper_Scraper
                 }
             }
 
+            // Temporar întrerupt: eliminăm Spații Comerciale din rulare
+            if (isset($valid_categories['spatii_comerciale'])) {
+                unset($valid_categories['spatii_comerciale']);
+            }
+
             if (empty($valid_categories)) {
                 return array(
                     'success' => false,
@@ -765,7 +770,12 @@ class Real_Estate_Scraper_Scraper
      */
     private function get_next_category_for_rotation()
     {
-        $category_order = array('apartamente', 'garsoniere', 'case_vile', 'spatii_comerciale');
+        $category_order = array(
+            'apartamente',
+            'garsoniere',
+            'case_vile'
+            // 'spatii_comerciale' // Temporar întrerupt
+        );
 
         // Get last added property
         $last_property = $this->get_last_added_property();

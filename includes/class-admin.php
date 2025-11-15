@@ -420,8 +420,8 @@ class Real_Estate_Scraper_Admin
         $category_labels = array(
             'apartamente' => __('Apartamente', 'real-estate-scraper'),
             'garsoniere' => __('Garsoniere', 'real-estate-scraper'),
-            'case_vile' => __('Case/Vile', 'real-estate-scraper'),
-            'spatii_comerciale' => __('Spații Comerciale', 'real-estate-scraper')
+            'case_vile' => __('Case/Vile', 'real-estate-scraper')
+            // 'spatii_comerciale' => __('Spații Comerciale', 'real-estate-scraper') // Temporar întrerupt
         );
 
         $category_urls = $options['category_urls'] ?? array();
