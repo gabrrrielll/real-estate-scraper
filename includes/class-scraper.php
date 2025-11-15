@@ -773,7 +773,10 @@ class Real_Estate_Scraper_Scraper
         $category_order = array(
             'apartamente',
             'garsoniere',
-            'case_vile'
+            'case_vile',
+            'apartamente_vanzare',
+            'garsoniere_vanzare',
+            'case_vile_vanzare'
             // 'spatii_comerciale' // Temporar întrerupt
         );
 

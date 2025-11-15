@@ -119,22 +119,28 @@ class Real_Estate_Scraper
         // Set default options
         $default_options = array(
             'category_urls' => array(
-                'apartamente' => 'https://example.com/apartamente',
-                'garsoniere' => 'https://example.com/garsoniere',
-                'case_vile' => 'https://example.com/case-vile',
-                'spatii_comerciale' => 'https://example.com/spatii-comerciale'
+                'apartamente' => 'https://example.com/inchiriere-apartamente',
+                'garsoniere' => 'https://example.com/inchiriere-garsoniere',
+                'case_vile' => 'https://example.com/inchiriere-case-vile',
+                'apartamente_vanzare' => 'https://example.com/vanzare-apartamente',
+                'garsoniere_vanzare' => 'https://example.com/vanzare-garsoniere',
+                'case_vile_vanzare' => 'https://example.com/vanzare-case-vile'
             ),
             'category_mapping' => array(
                 'apartamente' => '',
                 'garsoniere' => '',
                 'case_vile' => '',
-                'spatii_comerciale' => ''
+                'apartamente_vanzare' => '',
+                'garsoniere_vanzare' => '',
+                'case_vile_vanzare' => ''
             ),
             'category_status_mapping' => array(
                 'apartamente' => '',
                 'garsoniere' => '',
                 'case_vile' => '',
-                'spatii_comerciale' => ''
+                'apartamente_vanzare' => '',
+                'garsoniere_vanzare' => '',
+                'case_vile_vanzare' => ''
             ),
             'cron_interval' => 'hourly',
             'properties_to_check' => 10,

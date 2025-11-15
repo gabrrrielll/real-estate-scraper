@@ -45,6 +45,22 @@ class Real_Estate_Scraper_Admin
     }
 
     /**
+     * Get available category labels for configuration table
+     */
+    private function get_category_labels()
+    {
+        return array(
+            'apartamente' => __('Apartamente (Închiriere)', 'real-estate-scraper'),
+            'garsoniere' => __('Garsoniere (Închiriere)', 'real-estate-scraper'),
+            'case_vile' => __('Case/Vile (Închiriere)', 'real-estate-scraper'),
+            'apartamente_vanzare' => __('Apartamente (Vânzare)', 'real-estate-scraper'),
+            'garsoniere_vanzare' => __('Garsoniere (Vânzare)', 'real-estate-scraper'),
+            'case_vile_vanzare' => __('Case/Vile (Vânzare)', 'real-estate-scraper')
+            // 'spatii_comerciale' => __('Spații Comerciale', 'real-estate-scraper') // Temporar întrerupt
+        );
+    }
+
+    /**
      * Register property metabox for scraper tools
      */
     public function register_property_tools_metabox()
@@ -417,12 +433,7 @@ class Real_Estate_Scraper_Admin
             $property_statuses = array();
         }
 
-        $category_labels = array(
-            'apartamente' => __('Apartamente', 'real-estate-scraper'),
-            'garsoniere' => __('Garsoniere', 'real-estate-scraper'),
-            'case_vile' => __('Case/Vile', 'real-estate-scraper')
-            // 'spatii_comerciale' => __('Spații Comerciale', 'real-estate-scraper') // Temporar întrerupt
-        );
+        $category_labels = $this->get_category_labels();
 
         $category_urls = $options['category_urls'] ?? array();
         $category_type_mapping = $options['category_mapping'] ?? array();
@@ -659,23 +670,19 @@ class Real_Estate_Scraper_Admin
         $db_category_mapping = $options['category_mapping'] ?? [];
         $db_category_status_mapping = $options['category_status_mapping'] ?? [];
 
+        $category_keys = array_keys($this->get_category_labels());
+        $urls_match = $this->compare_category_arrays($post_category_urls, $db_category_urls, $category_keys);
+        $type_mapping_match = $this->compare_category_arrays($post_category_mapping, $db_category_mapping, $category_keys, true);
+        $status_mapping_match = $this->compare_category_arrays($post_category_status_mapping, $db_category_status_mapping, $category_keys, true);
+
         $save_successful = (
-            (isset($post_category_urls['apartamente']) && isset($db_category_urls['apartamente']) && $post_category_urls['apartamente'] == $db_category_urls['apartamente']) &&
-            (isset($post_category_urls['garsoniere']) && isset($db_category_urls['garsoniere']) && $post_category_urls['garsoniere'] == $db_category_urls['garsoniere']) &&
-            (isset($post_category_urls['case_vile']) && isset($db_category_urls['case_vile']) && $post_category_urls['case_vile'] == $db_category_urls['case_vile']) &&
-            (isset($post_category_urls['spatii_comerciale']) && isset($db_category_urls['spatii_comerciale']) && $post_category_urls['spatii_comerciale'] == $db_category_urls['spatii_comerciale']) &&
+            $urls_match &&
             ($post_properties_to_check == $db_properties_to_check) &&
             ($post_cron_interval == $db_cron_interval) &&
             ($post_default_status == $db_default_status) &&
             ($post_enable_cron == $db_enable_cron) &&
-            (intval($post_category_mapping['apartamente'] ?? 0) === intval($db_category_mapping['apartamente'] ?? 0)) &&
-            (intval($post_category_mapping['garsoniere'] ?? 0) === intval($db_category_mapping['garsoniere'] ?? 0)) &&
-            (intval($post_category_mapping['case_vile'] ?? 0) === intval($db_category_mapping['case_vile'] ?? 0)) &&
-            (intval($post_category_mapping['spatii_comerciale'] ?? 0) === intval($db_category_mapping['spatii_comerciale'] ?? 0)) &&
-            (intval($post_category_status_mapping['apartamente'] ?? 0) === intval($db_category_status_mapping['apartamente'] ?? 0)) &&
-            (intval($post_category_status_mapping['garsoniere'] ?? 0) === intval($db_category_status_mapping['garsoniere'] ?? 0)) &&
-            (intval($post_category_status_mapping['case_vile'] ?? 0) === intval($db_category_status_mapping['case_vile'] ?? 0)) &&
-            (intval($post_category_status_mapping['spatii_comerciale'] ?? 0) === intval($db_category_status_mapping['spatii_comerciale'] ?? 0))
+            $type_mapping_match &&
+            $status_mapping_match
         );
 
         if ($save_successful) {
@@ -710,35 +717,30 @@ class Real_Estate_Scraper_Admin
 
         // Sanitize and prepare options
         $options = array();
+        $category_keys = array_keys($this->get_category_labels());
 
         // Sanitize category URLs
         if (isset($_POST['category_urls']) && is_array($_POST['category_urls'])) {
-            $options['category_urls'] = array(
-                'apartamente' => isset($_POST['category_urls']['apartamente']) ? sanitize_url($_POST['category_urls']['apartamente']) : '',
-                'garsoniere' => isset($_POST['category_urls']['garsoniere']) ? sanitize_url($_POST['category_urls']['garsoniere']) : '',
-                'case_vile' => isset($_POST['category_urls']['case_vile']) ? sanitize_url($_POST['category_urls']['case_vile']) : '',
-                'spatii_comerciale' => isset($_POST['category_urls']['spatii_comerciale']) ? sanitize_url($_POST['category_urls']['spatii_comerciale']) : ''
-            );
+            $options['category_urls'] = array();
+            foreach ($category_keys as $category_key) {
+                $options['category_urls'][$category_key] = isset($_POST['category_urls'][$category_key]) ? sanitize_url($_POST['category_urls'][$category_key]) : '';
+            }
         }
 
         // Sanitize category mapping
         if (isset($_POST['category_mapping']) && is_array($_POST['category_mapping'])) {
-            $options['category_mapping'] = array(
-                'apartamente' => isset($_POST['category_mapping']['apartamente']) ? intval($_POST['category_mapping']['apartamente']) : 0,
-                'garsoniere' => isset($_POST['category_mapping']['garsoniere']) ? intval($_POST['category_mapping']['garsoniere']) : 0,
-                'case_vile' => isset($_POST['category_mapping']['case_vile']) ? intval($_POST['category_mapping']['case_vile']) : 0,
-                'spatii_comerciale' => isset($_POST['category_mapping']['spatii_comerciale']) ? intval($_POST['category_mapping']['spatii_comerciale']) : 0
-            );
+            $options['category_mapping'] = array();
+            foreach ($category_keys as $category_key) {
+                $options['category_mapping'][$category_key] = isset($_POST['category_mapping'][$category_key]) ? intval($_POST['category_mapping'][$category_key]) : 0;
+            }
         }
 
         // Sanitize category status mapping
         if (isset($_POST['category_status_mapping']) && is_array($_POST['category_status_mapping'])) {
-            $options['category_status_mapping'] = array(
-                'apartamente' => isset($_POST['category_status_mapping']['apartamente']) ? intval($_POST['category_status_mapping']['apartamente']) : 0,
-                'garsoniere' => isset($_POST['category_status_mapping']['garsoniere']) ? intval($_POST['category_status_mapping']['garsoniere']) : 0,
-                'case_vile' => isset($_POST['category_status_mapping']['case_vile']) ? intval($_POST['category_status_mapping']['case_vile']) : 0,
-                'spatii_comerciale' => isset($_POST['category_status_mapping']['spatii_comerciale']) ? intval($_POST['category_status_mapping']['spatii_comerciale']) : 0
-            );
+            $options['category_status_mapping'] = array();
+            foreach ($category_keys as $category_key) {
+                $options['category_status_mapping'][$category_key] = isset($_POST['category_status_mapping'][$category_key]) ? intval($_POST['category_status_mapping'][$category_key]) : 0;
+            }
         }
 
         // Other options
@@ -765,5 +767,28 @@ class Real_Estate_Scraper_Admin
         } catch (Exception $e) {
             error_log('[CRON ERROR] ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Compare category arrays (URL or taxonomy mappings)
+     */
+    private function compare_category_arrays($posted, $stored, $category_keys, $compare_int = false)
+    {
+        foreach ($category_keys as $key) {
+            $posted_value = $posted[$key] ?? ($compare_int ? 0 : '');
+            $stored_value = $stored[$key] ?? ($compare_int ? 0 : '');
+
+            if ($compare_int) {
+                if (intval($posted_value) !== intval($stored_value)) {
+                    return false;
+                }
+            } else {
+                if ((string) $posted_value !== (string) $stored_value) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }
