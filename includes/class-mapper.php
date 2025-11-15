@@ -36,6 +36,8 @@ class Real_Estate_Scraper_Mapper
     public function create_property_post($property_data, $category_key)
     {
         try {
+            $this->logger->info("[MAPPER] Creating property for category={$category_key}");
+
             $property_type_id = intval($this->options['category_mapping'][$category_key] ?? 0);
             $property_status_id = intval($this->options['category_status_mapping'][$category_key] ?? 0);
 
@@ -46,6 +48,7 @@ class Real_Estate_Scraper_Mapper
             if ($property_status_id > 0) {
                 $tax_input['property_status'] = array($property_status_id);
             }
+            $this->logger->info("[MAPPER] tax_input=" . wp_json_encode($tax_input));
 
             // Prepare post data
             $post_data = array(
@@ -68,6 +71,7 @@ class Real_Estate_Scraper_Mapper
 
             // Create the post
             $post_id = wp_insert_post($post_data);
+            $this->logger->info("[MAPPER] wp_insert_post → {$post_id}");
 
             if (is_wp_error($post_id)) {
                 throw new Exception('Failed to create post: ' . $post_id->get_error_message());
@@ -205,12 +209,14 @@ class Real_Estate_Scraper_Mapper
         // Set property type based on category mapping
         $property_type = intval($this->options['category_mapping'][$category_key] ?? 0);
         if ($property_type > 0) {
+            $this->logger->info("[MAPPER] wp_set_post_terms(type) post={$post_id} term={$property_type}");
             wp_set_post_terms($post_id, array($property_type), 'property_type', false);
         }
 
         // Set property status based on category mapping
         $property_status = intval($this->options['category_status_mapping'][$category_key] ?? 0);
         if ($property_status > 0) {
+            $this->logger->info("[MAPPER] wp_set_post_terms(status) post={$post_id} term={$property_status}");
             wp_set_post_terms($post_id, array($property_status), 'property_status', false);
         }
     }
