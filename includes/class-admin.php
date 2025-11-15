@@ -35,6 +35,7 @@ class Real_Estate_Scraper_Admin
         add_action('admin_enqueue_scripts', array($this, 'enqueue_jquery'));
 
         add_action('admin_post_res_save_settings', array($this, 'handle_save_settings'));
+        add_action('admin_post_res_delete_old_properties', array($this, 'handle_delete_old_properties'));
 
         add_action('add_meta_boxes_property', array($this, 'register_property_tools_metabox'));
         add_action('wp_ajax_res_refresh_property_text', array($this, 'ajax_refresh_property_text'));
@@ -402,6 +403,21 @@ class Real_Estate_Scraper_Admin
             echo '<div class="notice notice-success is-dismissible"><p>' . __('Settings saved successfully!', 'real-estate-scraper') . '</p></div>';
         } elseif (isset($_GET['settings-error']) && $_GET['settings-error'] == '1') {
             echo '<div class="notice notice-error is-dismissible"><p>' . __('Error: Settings could not be saved or verified. Please check logs.', 'real-estate-scraper') . '</p></div>';
+        } elseif (isset($_GET['delete-status']) && $_GET['delete-status'] === 'success') {
+            $deleted_posts = intval($_GET['deleted-posts'] ?? 0);
+            $deleted_media = intval($_GET['deleted-media'] ?? 0);
+            $days = intval($_GET['delete-days'] ?? 0);
+            printf(
+                '<div class="notice notice-success is-dismissible"><p>%s</p></div>',
+                esc_html(sprintf(
+                    __('Deleted %1$d properties and %2$d media items older than %3$d days.', 'real-estate-scraper'),
+                    $deleted_posts,
+                    $deleted_media,
+                    $days
+                ))
+            );
+        } elseif (isset($_GET['delete-status']) && $_GET['delete-status'] === 'error') {
+            echo '<div class="notice notice-error is-dismissible"><p>' . __('Delete operation failed. Please try again.', 'real-estate-scraper') . '</p></div>';
         }
 
         // Check permissions first
@@ -584,6 +600,34 @@ class Real_Estate_Scraper_Admin
                         </div>
                         
                         <?php submit_button(); ?>
+                    </form>
+
+                    <form method="post" action="<?php echo esc_url(admin_url('admin-post.php')); ?>" class="res-delete-form">
+                        <input type="hidden" name="action" value="res_delete_old_properties" />
+                        <?php wp_nonce_field('res_delete_old_properties', 'res_delete_nonce'); ?>
+                        <div class="res-settings-section">
+                            <h2><?php _e('Delete Options', 'real-estate-scraper'); ?></h2>
+                            <p class="description"><?php _e('Delete old property posts together with their media attachments.', 'real-estate-scraper'); ?></p>
+                            <table class="form-table">
+                                <tr>
+                                    <th scope="row"><?php _e('Delete properties older than', 'real-estate-scraper'); ?></th>
+                                    <td>
+                                        <select name="res_delete_days" id="res-delete-days">
+                                            <?php
+                                            $delete_options = array(7, 14, 30, 60, 90, 120, 180, 365);
+                                            foreach ($delete_options as $days_option) :
+                                            ?>
+                                                <option value="<?php echo esc_attr($days_option); ?>">
+                                                    <?php echo esc_html(sprintf(_n('%d day', '%d days', $days_option, 'real-estate-scraper'), $days_option)); ?>
+                                                </option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                        <p class="description"><?php _e('This will permanently delete the posts and all images imported for them.', 'real-estate-scraper'); ?></p>
+                                    </td>
+                                </tr>
+                            </table>
+                            <?php submit_button(__('Delete Old Properties', 'real-estate-scraper'), 'delete'); ?>
+                        </div>
                     </form>
                 </div>
                 
@@ -790,5 +834,100 @@ class Real_Estate_Scraper_Admin
         }
 
         return true;
+    }
+
+    /**
+     * Handle delete old properties submission
+     */
+    public function handle_delete_old_properties()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to delete properties.', 'real-estate-scraper'));
+        }
+
+        if (!isset($_POST['res_delete_nonce']) || !wp_verify_nonce($_POST['res_delete_nonce'], 'res_delete_old_properties')) {
+            wp_die(__('Security check failed. Please try again.', 'real-estate-scraper'));
+        }
+
+        $days = isset($_POST['res_delete_days']) ? absint($_POST['res_delete_days']) : 0;
+        $redirect_url = admin_url('admin.php?page=real-estate-scraper');
+
+        if ($days <= 0) {
+            wp_redirect(add_query_arg('delete-status', 'error', $redirect_url));
+            exit;
+        }
+
+        $result = $this->delete_properties_older_than($days);
+
+        $redirect_url = add_query_arg(
+            array(
+                'delete-status' => 'success',
+                'deleted-posts' => $result['posts'],
+                'deleted-media' => $result['media'],
+                'delete-days' => $days
+            ),
+            $redirect_url
+        );
+
+        wp_redirect($redirect_url);
+        exit;
+    }
+
+    /**
+     * Delete properties older than provided days and their media
+     */
+    private function delete_properties_older_than($days)
+    {
+        $cutoff = gmdate('Y-m-d H:i:s', strtotime("-{$days} days"));
+
+        $post_ids = get_posts(array(
+            'post_type' => 'property',
+            'post_status' => array('publish', 'draft', 'pending', 'private'),
+            'posts_per_page' => -1,
+            'fields' => 'ids',
+            'date_query' => array(
+                array(
+                    'column' => 'post_date_gmt',
+                    'before' => $cutoff,
+                    'inclusive' => true,
+                ),
+            ),
+            'suppress_filters' => true,
+        ));
+
+        $deleted_posts = 0;
+        $deleted_media = 0;
+        $deleted_attachments = array();
+
+        foreach ($post_ids as $post_id) {
+            $attachments = get_attached_media('', $post_id);
+            foreach ($attachments as $attachment) {
+                $attachment_id = $attachment->ID;
+                if (isset($deleted_attachments[$attachment_id])) {
+                    continue;
+                }
+                if (wp_delete_attachment($attachment_id, true)) {
+                    $deleted_media++;
+                    $deleted_attachments[$attachment_id] = true;
+                }
+            }
+
+            $thumbnail_id = get_post_thumbnail_id($post_id);
+            if ($thumbnail_id && !isset($deleted_attachments[$thumbnail_id])) {
+                if (wp_delete_attachment($thumbnail_id, true)) {
+                    $deleted_media++;
+                    $deleted_attachments[$thumbnail_id] = true;
+                }
+            }
+
+            if (wp_delete_post($post_id, true)) {
+                $deleted_posts++;
+            }
+        }
+
+        return array(
+            'posts' => $deleted_posts,
+            'media' => $deleted_media,
+        );
     }
 }
