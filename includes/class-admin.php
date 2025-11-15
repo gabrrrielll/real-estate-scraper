@@ -612,17 +612,15 @@ class Real_Estate_Scraper_Admin
                                 <tr>
                                     <th scope="row"><?php _e('Delete properties older than', 'real-estate-scraper'); ?></th>
                                     <td>
-                                        <select name="res_delete_days" id="res-delete-days">
-                                            <?php
-                                            $delete_options = array(7, 14, 30, 60, 90, 120, 180, 365);
-                                            foreach ($delete_options as $days_option) :
-                                            ?>
-                                                <option value="<?php echo esc_attr($days_option); ?>">
-                                                    <?php echo esc_html(sprintf(_n('%d day', '%d days', $days_option, 'real-estate-scraper'), $days_option)); ?>
-                                                </option>
-                                            <?php endforeach; ?>
-                                        </select>
-                                        <p class="description"><?php _e('This will permanently delete the posts and all images imported for them.', 'real-estate-scraper'); ?></p>
+                                        <input type="number"
+                                               name="res_delete_days"
+                                               id="res-delete-days"
+                                               value="30"
+                                               min="0"
+                                               step="1"
+                                               class="small-text" />
+                                        <span><?php _e('days', 'real-estate-scraper'); ?></span>
+                                        <p class="description"><?php _e('Enter any number of days (including 0 or 1). All matching properties and their images will be permanently removed.', 'real-estate-scraper'); ?></p>
                                     </td>
                                 </tr>
                             </table>
@@ -852,7 +850,7 @@ class Real_Estate_Scraper_Admin
         $days = isset($_POST['res_delete_days']) ? absint($_POST['res_delete_days']) : 0;
         $redirect_url = admin_url('admin.php?page=real-estate-scraper');
 
-        if ($days <= 0) {
+        if ($days < 0) {
             wp_redirect(add_query_arg('delete-status', 'error', $redirect_url));
             exit;
         }
