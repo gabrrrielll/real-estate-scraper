@@ -37,8 +37,8 @@ class Real_Estate_Scraper_Mapper
     {
         try {
             $mapper_message = "[MAPPER] Creating property for category={$category_key}";
-            $this->logger->info($mapper_message);
-            error_log($mapper_message);
+            // $this->logger->info($mapper_message);
+            // error_log($mapper_message);
 
             $property_type_id = intval($this->options['category_mapping'][$category_key] ?? 0);
             $property_status_id = intval($this->options['category_status_mapping'][$category_key] ?? 0);
@@ -51,8 +51,8 @@ class Real_Estate_Scraper_Mapper
                 $tax_input['property_status'] = array($property_status_id);
             }
             $tax_message = "[MAPPER] tax_input=" . wp_json_encode($tax_input);
-            $this->logger->info($tax_message);
-            error_log($tax_message);
+            // $this->logger->info($tax_message);
+            // error_log($tax_message);
 
             // Prepare post data
             $post_data = array(
@@ -76,8 +76,8 @@ class Real_Estate_Scraper_Mapper
             // Create the post
             $post_id = wp_insert_post($post_data);
             $insert_message = "[MAPPER] wp_insert_post → {$post_id}";
-            $this->logger->info($insert_message);
-            error_log($insert_message);
+            // $this->logger->info($insert_message);
+            // error_log($insert_message);
 
             if (is_wp_error($post_id)) {
                 throw new Exception('Failed to create post: ' . $post_id->get_error_message());
@@ -101,7 +101,7 @@ class Real_Estate_Scraper_Mapper
             return $post_id;
 
         } catch (Exception $e) {
-            $this->logger->error('Failed to create property post: ' . $e->getMessage());
+            // $this->logger->error('Failed to create property post: ' . $e->getMessage());
             return false;
         }
     }
@@ -216,8 +216,8 @@ class Real_Estate_Scraper_Mapper
         $property_type = intval($this->options['category_mapping'][$category_key] ?? 0);
         if ($property_type > 0) {
             $type_message = "[MAPPER] wp_set_post_terms(type) post={$post_id} term={$property_type}";
-            $this->logger->info($type_message);
-            error_log($type_message);
+            // $this->logger->info($type_message);
+            // error_log($type_message);
             wp_set_post_terms($post_id, array($property_type), 'property_type', false);
         }
 
@@ -225,8 +225,8 @@ class Real_Estate_Scraper_Mapper
         $property_status = intval($this->options['category_status_mapping'][$category_key] ?? 0);
         if ($property_status > 0) {
             $status_message = "[MAPPER] wp_set_post_terms(status) post={$post_id} term={$property_status}";
-            $this->logger->info($status_message);
-            error_log($status_message);
+            // $this->logger->info($status_message);
+            // error_log($status_message);
             wp_set_post_terms($post_id, array($property_status), 'property_status', false);
         }
     }
@@ -277,7 +277,7 @@ class Real_Estate_Scraper_Mapper
                     $uploaded_images[] = $image_id;
                 }
             } catch (Exception $e) {
-                $this->logger->warning("Failed to download image {$image_url}: " . $e->getMessage());
+                // $this->logger->warning("Failed to download image {$image_url}: " . $e->getMessage());
             }
         }
 

@@ -44,7 +44,7 @@ class Real_Estate_Scraper_Cron
         // Schedule new cron
         if (!wp_next_scheduled('real_estate_scraper_cron')) {
             wp_schedule_event(time(), $interval, 'real_estate_scraper_cron');
-            $this->logger->info("Cron scheduled with interval: {$interval}");
+            // $this->logger->info("Cron scheduled with interval: {$interval}");
         }
     }
 
@@ -56,7 +56,7 @@ class Real_Estate_Scraper_Cron
         $timestamp = wp_next_scheduled('real_estate_scraper_cron');
         if ($timestamp) {
             wp_unschedule_event($timestamp, 'real_estate_scraper_cron');
-            $this->logger->info("Cron cleared");
+            // $this->logger->info("Cron cleared");
         }
     }
 
@@ -65,23 +65,23 @@ class Real_Estate_Scraper_Cron
      */
     public function run_cron_job()
     {
-        $this->logger->info("=== CRON JOB STARTED ===");
+        // $this->logger->info("=== CRON JOB STARTED ===");
 
         try {
             $scraper = Real_Estate_Scraper_Scraper::get_instance();
             $result = $scraper->run_scraper();
 
             if ($result['success']) {
-                $this->logger->info("Cron job completed successfully");
+                // $this->logger->info("Cron job completed successfully");
             } else {
-                $this->logger->error("Cron job failed: " . $result['message']);
+                // $this->logger->error("Cron job failed: " . $result['message']);
             }
 
         } catch (Exception $e) {
-            $this->logger->error("Cron job error: " . $e->getMessage());
+            // $this->logger->error("Cron job error: " . $e->getMessage());
         }
 
-        $this->logger->info("=== CRON JOB FINISHED ===");
+        // $this->logger->info("=== CRON JOB FINISHED ===");
     }
 
     /**
@@ -176,7 +176,7 @@ class Real_Estate_Scraper_Cron
         // Reschedule cron
         $this->schedule_cron();
 
-        $this->logger->info("Cron interval updated to: {$new_interval}");
+        // $this->logger->info("Cron interval updated to: {$new_interval}");
     }
 
     /**
@@ -184,20 +184,20 @@ class Real_Estate_Scraper_Cron
      */
     public function test_cron()
     {
-        $this->logger->info("=== CRON TEST STARTED ===");
+        // $this->logger->info("=== CRON TEST STARTED ===");
 
         try {
             // Test if cron can run
             $this->run_cron_job();
 
-            $this->logger->info("Cron test completed successfully");
+            // $this->logger->info("Cron test completed successfully");
             return array(
                 'success' => true,
                 'message' => __('Cron test completed successfully.', 'real-estate-scraper')
             );
 
         } catch (Exception $e) {
-            $this->logger->error("Cron test failed: " . $e->getMessage());
+            // $this->logger->error("Cron test failed: " . $e->getMessage());
             return array(
                 'success' => false,
                 'message' => __('Cron test failed: ', 'real-estate-scraper') . $e->getMessage()

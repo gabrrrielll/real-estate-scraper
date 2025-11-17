@@ -807,7 +807,7 @@ class Real_Estate_Scraper_Admin
                 $cron->clear_cron();
             }
         } catch (Exception $e) {
-            error_log('[CRON ERROR] ' . $e->getMessage());
+            // error_log('[CRON ERROR] ' . $e->getMessage());
         }
     }
 

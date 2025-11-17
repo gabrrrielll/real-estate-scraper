@@ -169,5 +169,3 @@ class Real_Estate_Scraper_Geocoder
         return $this->reverse_geocode('45.9432', '24.9668');
     }
 }
-
-

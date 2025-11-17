@@ -38,7 +38,7 @@ class Real_Estate_Scraper_Scraper
         $start_time = microtime(true);
 
         try {
-            error_log('=== SCRAPER STARTED ===');
+            // error_log('=== SCRAPER STARTED ===');
 
             $stats = array(
                 'total_found' => 0,
@@ -54,7 +54,7 @@ class Real_Estate_Scraper_Scraper
             // Log configuration
             $category_count = count($this->options['category_urls']);
             $max_display = ($max_ads_global == 0) ? 'unlimited' : $max_ads_global;
-            error_log("Config: {$category_count} categories, Max: {$max_display} ads/session");
+            // error_log("Config: {$category_count} categories, Max: {$max_display} ads/session");
 
             // Get valid categories
             $valid_categories = array();
@@ -105,7 +105,7 @@ class Real_Estate_Scraper_Scraper
                     // Log progress
                     if ($max_ads_global > 0) {
                         $progress_status = ($ads_processed_global >= $max_ads_global) ? ' (LIMIT REACHED)' : '';
-                        error_log("[PROGRESS] {$ads_processed_global}/{$max_ads_global} ads processed{$progress_status}");
+                        // error_log("[PROGRESS] {$ads_processed_global}/{$max_ads_global} ads processed{$progress_status}");
                     }
                 } else {
                     break;
@@ -122,11 +122,11 @@ class Real_Estate_Scraper_Scraper
             $stats['execution_time'] = $execution_time;
 
             // Log scraper completion
-            error_log('=== SCRAPER COMPLETED ===');
-            error_log("Stats: Processed={$ads_processed_global}, New={$stats['new_added']}, Duplicates={$stats['duplicates_skipped']}, Errors={$stats['errors']}");
-            error_log("Time: {$execution_time}s");
+            // error_log('=== SCRAPER COMPLETED ===');
+            // error_log("Stats: Processed={$ads_processed_global}, New={$stats['new_added']}, Duplicates={$stats['duplicates_skipped']}, Errors={$stats['errors']}");
+            // error_log("Time: {$execution_time}s");
 
-            $this->logger->log_scraper_end($stats);
+            // $this->logger->log_scraper_end($stats);
 
             return array(
                 'success' => true,
@@ -135,7 +135,7 @@ class Real_Estate_Scraper_Scraper
             );
 
         } catch (Exception $e) {
-            $this->logger->error('Scraper failed: ' . $e->getMessage());
+            // $this->logger->error('Scraper failed: ' . $e->getMessage());
 
             return array(
                 'success' => false,
@@ -161,15 +161,15 @@ class Real_Estate_Scraper_Scraper
             // Get property URLs from category page
             $property_urls = $this->get_property_urls_from_category($url);
             $category_upper = strtoupper($category_key);
-            error_log("[CATEGORY] {$category_upper} ({$url}) → " . count($property_urls) . " ads");
+            // error_log("[CATEGORY] {$category_upper} ({$url}) → " . count($property_urls) . " ads");
 
             // Log all extracted URLs for debugging
-            if (!empty($property_urls)) {
-                error_log("[LINKS] Extracted " . count($property_urls) . " links from {$category_upper}:");
-                foreach ($property_urls as $index => $link) {
-                    error_log("  [{$index}] {$link}");
-                }
-            }
+            // if (!empty($property_urls)) {
+            //     error_log("[LINKS] Extracted " . count($property_urls) . " links from {$category_upper}:");
+            //     foreach ($property_urls as $index => $link) {
+            //         error_log("  [{$index}] {$link}");
+            //     }
+            // }
 
             if (empty($property_urls)) {
                 return $stats;
@@ -202,12 +202,12 @@ class Real_Estate_Scraper_Scraper
             }
 
             // If all attempts were duplicates or errors, no "found" increment
-            if ($stats['new'] == 0) {
-                error_log("[CATEGORY] {$category_upper} → No new ads found (checked {$attempt} ads: {$stats['duplicates']} duplicates, {$stats['errors']} errors)");
-            }
+            // if ($stats['new'] == 0) {
+            //     error_log("[CATEGORY] {$category_upper} → No new ads found (checked {$attempt} ads: {$stats['duplicates']} duplicates, {$stats['errors']} errors)");
+            // }
 
         } catch (Exception $e) {
-            $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
+            // $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
             $stats['errors'] = 1;
         }
 
@@ -257,11 +257,11 @@ class Real_Estate_Scraper_Scraper
             }
 
         } catch (Exception $e) {
-            $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
+            // $this->logger->error("[ERROR] Category {$category_key}: " . $e->getMessage());
             $stats['errors']++;
         }
 
-        $this->logger->log_category_end($category_key, $stats);
+        // $this->logger->log_category_end($category_key, $stats);
 
         return $stats;
     }
@@ -300,12 +300,12 @@ class Real_Estate_Scraper_Scraper
                 return $property_urls;
 
             } catch (Exception $e) {
-                $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
+                // $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
                 if ($attempt < $max_attempts) {
                     // sleep disabled for testing
                 } else {
-                    $this->logger->log_final_error($e->getMessage());
+                    // $this->logger->log_final_error($e->getMessage());
                     throw $e;
                 }
             }
@@ -355,11 +355,11 @@ class Real_Estate_Scraper_Scraper
         try {
             // Check if property already exists
             if ($this->is_duplicate($property_url)) {
-                error_log("[AD] {$property_url} → Duplicate (Skip)");
+                // error_log("[AD] {$property_url} → Duplicate (Skip)");
                 return array('success' => true, 'is_new' => false);
             }
 
-            error_log("[AD] {$property_url} → New (Extracting...)");
+            // error_log("[AD] {$property_url} → New (Extracting...)");
 
             // Fetch property data
             $property_data = $this->fetch_property_data($property_url);
@@ -374,7 +374,7 @@ class Real_Estate_Scraper_Scraper
             if ($post_id) {
                 $term_id = $this->options['category_mapping'][$category_key] ?? 'N/A';
                 $category_upper = strtoupper($category_key);
-                error_log("[INSERT] Post ID={$post_id}, Cat={$category_upper} (Term ID={$term_id}), Title=\"{$property_data['title']}\"");
+                // error_log("[INSERT] Post ID={$post_id}, Cat={$category_upper} (Term ID={$term_id}), Title=\"{$property_data['title']}\"");
                 return array('success' => true, 'is_new' => true, 'post_id' => $post_id);
             } else {
                 throw new Exception('Failed to create property post');
@@ -382,18 +382,18 @@ class Real_Estate_Scraper_Scraper
 
         } catch (Exception $e) {
             // Enhanced error logging
-            error_log("[ERROR] {$property_url}");
+            // error_log("[ERROR] {$property_url}");
             // Check if extraction was successful by verifying title exists (main indicator)
-            if (!empty($property_data) && !empty($property_data['title'])) {
-                error_log("  → Extraction: OK");
-                error_log("  → Title: \"{$property_data['title']}\"");
-                if (!empty($property_data['price'])) {
-                    error_log("  → Price: \"{$property_data['price']}\"");
-                }
-            } else {
-                error_log("  → Extraction: FAILED (No title found - ad may be inactive/expired)");
-            }
-            error_log("  → Reason: " . $e->getMessage());
+            // if (!empty($property_data) && !empty($property_data['title'])) {
+            //     error_log("  → Extraction: OK");
+            //     error_log("  → Title: \"{$property_data['title']}\"");
+            //     if (!empty($property_data['price'])) {
+            //         error_log("  → Price: \"{$property_data['price']}\"");
+            //     }
+            // } else {
+            //     error_log("  → Extraction: FAILED (No title found - ad may be inactive/expired)");
+            // }
+            // error_log("  → Reason: " . $e->getMessage());
             return array('success' => false, 'error' => $e->getMessage());
         }
     }
@@ -443,10 +443,10 @@ class Real_Estate_Scraper_Scraper
                 return $property_data;
 
             } catch (Exception $e) {
-                $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
+                // $this->logger->log_error_with_retry($e->getMessage(), $attempt, $max_attempts);
 
                 if ($attempt >= $max_attempts) {
-                    $this->logger->log_final_error($e->getMessage());
+                    // $this->logger->log_final_error($e->getMessage());
                     throw $e;
                 }
             }
@@ -611,14 +611,14 @@ class Real_Estate_Scraper_Scraper
             }
         }
 
-        if (!empty($specifications)) {
-            error_log('[SPECS RAW] Found ' . count($specifications) . ' items');
-            foreach ($specifications as $attribute => $value) {
-                error_log('  ' . $attribute . ': ' . $value);
-            }
-        } else {
-            error_log('[SPECS RAW] No specifications found');
-        }
+        // if (!empty($specifications)) {
+        //     error_log('[SPECS RAW] Found ' . count($specifications) . ' items');
+        //     foreach ($specifications as $attribute => $value) {
+        //         error_log('  ' . $attribute . ': ' . $value);
+        //     }
+        // } else {
+        //     error_log('[SPECS RAW] No specifications found');
+        // }
 
         return $specifications;
     }
@@ -664,14 +664,14 @@ class Real_Estate_Scraper_Scraper
             }
         }
 
-        if (!empty($mapped)) {
-            error_log('[SPECS MAPPED] ' . count($mapped) . ' matches');
-            foreach ($mapped as $meta_key => $value) {
-                error_log('  ' . $meta_key . ': ' . $value);
-            }
-        } else {
-            error_log('[SPECS MAPPED] No matches found');
-        }
+        // if (!empty($mapped)) {
+        //     error_log('[SPECS MAPPED] ' . count($mapped) . ' matches');
+        //     foreach ($mapped as $meta_key => $value) {
+        //         error_log('  ' . $meta_key . ': ' . $value);
+        //     }
+        // } else {
+        //     error_log('[SPECS MAPPED] No matches found');
+        // }
 
         return $mapped;
     }
@@ -804,9 +804,9 @@ class Real_Estate_Scraper_Scraper
         $next_category = $category_order[$next_index];
 
         // Log rotation with uppercase categories
-        $last_cat_upper = strtoupper($last_category);
-        $next_cat_upper = strtoupper($next_category);
-        error_log("[ROTATION] Last post: ID={$last_property->ID} ({$last_cat_upper}) → Next: {$next_cat_upper}");
+        // $last_cat_upper = strtoupper($last_category);
+        // $next_cat_upper = strtoupper($next_category);
+        // error_log("[ROTATION] Last post: ID={$last_property->ID} ({$last_cat_upper}) → Next: {$next_cat_upper}");
 
         return $next_category;
     }
