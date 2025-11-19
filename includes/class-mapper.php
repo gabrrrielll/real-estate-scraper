@@ -626,30 +626,47 @@ class Real_Estate_Scraper_Mapper
             }
         }
 
+        // Set City taxonomy first (needed for special cases like Bucharest)
+        $city_name = '';
+        if (!empty($address['city'])) {
+            $city_name = $this->clean_taxonomy_name($address['city']);
+            $city_term = $this->get_or_create_term('property_city', $city_name);
+            if ($city_term) {
+                wp_set_object_terms($post_id, array($city_term->term_id), 'property_city');
+            }
+        }
+
         // Set State/County taxonomy
+        $state_name = '';
+
+        // First, try to get county from geocoded address
         if (!empty($address['county'])) {
             $state_name = $this->clean_taxonomy_name($address['county']);
+        }
+
+        // Special handling for Bucharest: if city is Bucharest but county is missing, set county to Bucharest
+        if (empty($state_name) && !empty($city_name)) {
+            // Check if city is Bucharest (handle different spellings)
+            $city_lower = mb_strtolower($city_name, 'UTF-8');
+            if (in_array($city_lower, array('bucurești', 'bucuresti', 'bucharest'))) {
+                $state_name = 'București'; // Set county to Bucharest if city is Bucharest
+            }
+        }
+
+        // Always set State if we have a state_name (either from county or from special case)
+        if (!empty($state_name)) {
             $state_term = $this->get_or_create_term('property_state', $state_name);
             if ($state_term) {
                 wp_set_object_terms($post_id, array($state_term->term_id), 'property_state');
             }
         }
 
-        // Set City taxonomy
-        if (!empty($address['city'])) {
-            $city_name = $this->clean_taxonomy_name($address['city']);
-            $city_term = $this->get_or_create_term('property_city', $city_name);
-            if ($city_term) {
-                wp_set_object_terms($post_id, array($city_term->term_id), 'property_city');
-                
-                // Set parent_state relationship for City (required by Houzez theme)
-                // This allows State selection to work when editing properties
-                if ($state_term && !empty($state_term->slug)) {
-                    update_option('_houzez_property_city_' . $city_term->term_id, array(
-                        'parent_state' => $state_term->slug
-                    ));
-                }
-            }
+        // Set parent_state relationship for City (required by Houzez theme)
+        // This allows State selection to work when editing properties
+        if ($city_term && $state_term && !empty($state_term->slug)) {
+            update_option('_houzez_property_city_' . $city_term->term_id, array(
+                'parent_state' => $state_term->slug
+            ));
         }
     }
 
@@ -661,6 +678,78 @@ class Real_Estate_Scraper_Mapper
         $name = trim($name);
         $name = sanitize_text_field($name);
         return $name;
+    }
+
+    /**
+     * Fix missing parent_state relationships for existing properties
+     * This function updates all cities that don't have parent_state set
+     * by finding properties with both city and state and setting the relationship
+     */
+    public function fix_missing_parent_state_relationships()
+    {
+        $updated_count = 0;
+        $errors = array();
+
+        // Get all properties
+        $properties = get_posts(array(
+            'post_type' => 'property',
+            'posts_per_page' => -1,
+            'post_status' => array('publish', 'draft', 'private', 'pending')
+        ));
+
+        foreach ($properties as $property) {
+            // Get city terms for this property
+            $city_terms = wp_get_post_terms($property->ID, 'property_city', array('fields' => 'all'));
+
+            if (empty($city_terms) || is_wp_error($city_terms)) {
+                continue;
+            }
+
+            // Get state terms for this property
+            $state_terms = wp_get_post_terms($property->ID, 'property_state', array('fields' => 'all'));
+
+            if (empty($state_terms) || is_wp_error($state_terms)) {
+                // Special case: if city is Bucharest but no state, set state to Bucharest
+                foreach ($city_terms as $city_term) {
+                    $city_name_lower = mb_strtolower($city_term->name, 'UTF-8');
+                    if (in_array($city_name_lower, array('bucurești', 'bucuresti', 'bucharest'))) {
+                        $state_term = $this->get_or_create_term('property_state', 'București');
+                        if ($state_term) {
+                            wp_set_object_terms($property->ID, array($state_term->term_id), 'property_state', true);
+                            $state_terms = array($state_term);
+                        }
+                    }
+                }
+
+                if (empty($state_terms) || is_wp_error($state_terms)) {
+                    continue;
+                }
+            }
+
+            // For each city, check if parent_state is set
+            foreach ($city_terms as $city_term) {
+                $city_meta = get_option('_houzez_property_city_' . $city_term->term_id);
+                $has_parent_state = !empty($city_meta['parent_state']);
+
+                if (!$has_parent_state) {
+                    // Use the first state term found for this property
+                    $state_term = $state_terms[0];
+
+                    if ($state_term && !empty($state_term->slug)) {
+                        update_option('_houzez_property_city_' . $city_term->term_id, array(
+                            'parent_state' => $state_term->slug
+                        ));
+                        $updated_count++;
+                    }
+                }
+            }
+        }
+
+        return array(
+            'success' => true,
+            'updated' => $updated_count,
+            'errors' => $errors
+        );
     }
 
 

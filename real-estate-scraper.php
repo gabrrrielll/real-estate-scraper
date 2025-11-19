@@ -86,6 +86,7 @@ class Real_Estate_Scraper
         add_action('wp_ajax_res_get_logs', array($this, 'ajax_get_logs'));
         add_action('wp_ajax_res_clean_logs', array($this, 'ajax_clean_logs'));
         add_action('wp_ajax_res_test_cron', array($this, 'ajax_test_cron'));
+        add_action('wp_ajax_res_fix_parent_state', array($this, 'ajax_fix_parent_state'));
     }
 
     public function init()
@@ -255,6 +256,20 @@ class Real_Estate_Scraper
 
         $cron = Real_Estate_Scraper_Cron::get_instance();
         $result = $cron->test_cron();
+
+        wp_send_json($result);
+    }
+
+    public function ajax_fix_parent_state()
+    {
+        check_ajax_referer('res_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions.', 'real-estate-scraper'));
+        }
+
+        $mapper = Real_Estate_Scraper_Mapper::get_instance();
+        $result = $mapper->fix_missing_parent_state_relationships();
 
         wp_send_json($result);
     }
