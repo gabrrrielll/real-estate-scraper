@@ -614,6 +614,8 @@ class Real_Estate_Scraper_Mapper
         }
 
         $address = $property_data['geocoded_address'];
+        $state_term = null;
+        $city_term = null;
 
         // Set Country taxonomy
         if (!empty($address['country'])) {
@@ -639,6 +641,14 @@ class Real_Estate_Scraper_Mapper
             $city_term = $this->get_or_create_term('property_city', $city_name);
             if ($city_term) {
                 wp_set_object_terms($post_id, array($city_term->term_id), 'property_city');
+                
+                // Set parent_state relationship for City (required by Houzez theme)
+                // This allows State selection to work when editing properties
+                if ($state_term && !empty($state_term->slug)) {
+                    update_option('_houzez_property_city_' . $city_term->term_id, array(
+                        'parent_state' => $state_term->slug
+                    ));
+                }
             }
         }
     }
